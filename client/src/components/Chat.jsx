@@ -1,9 +1,11 @@
+// Chat.jsx
 import React, { useState } from "react";
 
-export default function Chat({ messages, onSendMessage }) {
+export default function Chat({ messages, onSendMessage, isDrawer }) {
   const [text, setText] = useState("");
 
   const send = () => {
+    if (!text.trim()) return;
     onSendMessage(text);
     setText("");
   };
@@ -18,16 +20,25 @@ export default function Chat({ messages, onSendMessage }) {
           </div>
         ))}
       </div>
-      <div style={styles.inputRow}>
-        <input
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyPress={e => e.key === "Enter" && send()}
-          placeholder="Scrie un mesaj..."
-          style={styles.input}
-        />
-        <button onClick={send} style={styles.btn}>Trimite</button>
-      </div>
+
+      {/* Dacă e drawer, nu afișăm input-ul */}
+      {!isDrawer && (
+        <div style={styles.inputRow}>
+          <input
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyPress={e => e.key === "Enter" && send()}
+            placeholder="Scrie un mesaj."
+            style={styles.input}
+          />
+          <button onClick={send} style={styles.btn}>Trimite</button>
+        </div>
+      )}
+      {isDrawer && (
+        <p style={{ fontStyle: "italic", color: "#888" }}>
+          (Nu poți ghici în timp ce desenezi)
+        </p>
+      )}
     </div>
   );
 }

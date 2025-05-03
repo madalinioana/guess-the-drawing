@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -15,11 +16,8 @@ const io = new Server(server, {
 });
 
 // Stări joc
-const gameState = new Map(); // { roomId: { currentWord, drawerId, drawingTime, guessingTime, phase } }
-const words = ["mar", "copac", "masina", "pisica", "telefon"];
-
-// Camere și membri
-const rooms = new Map(); // roomId → Set<socket.id>
+const gameState = new Map(); // roomId → { drawerId, currentWord, drawingTime, phase, timer }
+const rooms = new Map();     // roomId → Set<socket.id>
 
 // Helper pentru lista de utilizatori
 function getUsers(roomId) {
@@ -60,7 +58,6 @@ io.on("connection", (socket) => {
       socket.emit("error", "Camera nu există!");
       return;
     }
-
     rooms.get(roomId).add(socket.id);
     socket.join(roomId);
     socket.roomId = roomId;
@@ -73,43 +70,87 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("updateUsers", getUsers(roomId));
   });
 
-  // Începere joc
+  // Începere joc → alegem un drawer și cerem cuvânt
   socket.on("startGame", (roomId) => {
     if (rooms.has(roomId) && rooms.get(roomId).size >= 2) {
-      startRound(roomId);
-    }
-  });
+      const players = Array.from(rooms.get(roomId));
+      const drawerId = players[Math.floor(Math.random() * players.length)];
+      const drawerSocket = io.sockets.sockets.get(drawerId);
 
-  // Chat
-  socket.on("message", (message) => {
-    const roomId = socket.roomId;
-    if (roomId) {
-      io.to(roomId).emit("message", {
-        username: socket.username,
-        message,
+      gameState.set(roomId, {
+        drawerId,
+        phase: "select-word",
+      });
+
+      // Drawer primește comanda de a alege cuvânt
+      drawerSocket.emit("setPhase", { phase: "select-word" });
+      // Toți ceilalți văd cine este drawer și așteaptă
+      io.to(roomId).emit("setPhase", {
+        phase: "select-word",
+        drawer: drawerSocket.username,
       });
     }
   });
 
-  // Guessing
-  socket.on("guess", (guess, callback) => {
+  // Drawer trimite cuvântul ales
+  socket.on("select-word", (word) => {
     const roomId = socket.roomId;
     const state = gameState.get(roomId);
-    if (!state || typeof callback !== "function") return;
+    if (!state || state.drawerId !== socket.id || state.phase !== "select-word") return;
 
-    if (guess.toLowerCase() === state.currentWord.toLowerCase()) {
+    state.currentWord = word.toLowerCase();
+    state.drawingTime = 60;
+    state.phase = "drawing";
+
+    // Anunțăm începutul fazei de desen
+    socket.emit("setPhase", { phase: "drawing", word: word, time: state.drawingTime });
+    io.to(roomId).emit("setPhase", {
+      phase: "drawing",
+      drawer: socket.username,
+      time: state.drawingTime,
+    });
+
+    // Pornim timer-ul
+    state.timer = setInterval(() => {
+      state.drawingTime--;
+      io.to(roomId).emit("timeUpdate", { time: state.drawingTime });
+
+      if (state.drawingTime <= 0) {
+        clearInterval(state.timer);
+        endRound(roomId);
+      }
+    }, 1000);
+  });
+
+  // Chat + detectare ghicit
+  socket.on("message", (message) => {
+    const roomId = socket.roomId;
+    const state = gameState.get(roomId);
+    if (!roomId) return;
+
+    // Broadcast mesaj
+    io.to(roomId).emit("message", {
+      username: socket.username,
+      message,
+    });
+
+    // Dacă este faza de desen și mesajul e exact cuvântul, e ghicit
+    if (
+      state &&
+      state.phase === "drawing" &&
+      socket.id !== state.drawerId &&
+      message.trim().toLowerCase() === state.currentWord
+    ) {
       io.to(roomId).emit("correctGuess", {
         username: socket.username,
         word: state.currentWord,
       });
+      clearInterval(state.timer);
       endRound(roomId);
-      callback(true);
-    } else {
-      callback(false);
     }
   });
 
-  // Desen: broadcast doar celorlalți din cameră
+  // Desen: doar broadcast pentru ceilalți
   socket.on("send-drawing", (data) => {
     const roomId = socket.roomId;
     if (roomId) {
@@ -117,103 +158,36 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Clear board
+  // Ștergere desen
   socket.on("clear-board", () => {
     const roomId = socket.roomId;
-    if (roomId) {
-      socket.broadcast.to(roomId).emit("clear-board");
-    }
+    if (roomId) socket.broadcast.to(roomId).emit("clear-board");
   });
 
-  // Deconectare
+  // Disconectare user
   socket.on("disconnect", () => {
     const roomId = socket.roomId;
     if (roomId && rooms.has(roomId)) {
       rooms.get(roomId).delete(socket.id);
       io.to(roomId).emit("updateUsers", getUsers(roomId));
-
-      if (rooms.get(roomId).size === 0) {
-        rooms.delete(roomId);
-      }
+      if (rooms.get(roomId).size === 0) rooms.delete(roomId);
     }
     console.log("❌ Utilizator deconectat:", socket.id);
   });
 });
 
-// --------- Logica rundei ---------
-
-function startRound(roomId) {
-  const players = Array.from(rooms.get(roomId));
-  const drawerId = players[Math.floor(Math.random() * players.length)];
-  const drawerSocket = io.sockets.sockets.get(drawerId);
-  const currentWord = words[Math.floor(Math.random() * words.length)];
-
-  gameState.set(roomId, {
-    currentWord,
-    drawerId,
-    drawingTime: 30,
-    guessingTime: 60,
-    phase: "drawing",
-  });
-
-  // Anunță desenatorul
-  drawerSocket.emit("setPhase", {
-    phase: "drawing",
-    word: currentWord,
-  });
-
-  // Anunță restul că începe faza de desen
-  io.to(roomId).emit("setPhase", {
-    phase: "drawing",
-    drawer: drawerSocket.username,
-  });
-
-  // Timer pentru desen și ghicit
-  let timer = setInterval(() => {
-    const state = gameState.get(roomId);
-    if (!state) {
-      clearInterval(timer);
-      return;
-    }
-
-    if (state.phase === "drawing") {
-      state.drawingTime--;
-      io.to(roomId).emit("timeUpdate", {
-        time: state.drawingTime,
-        phase: "drawing",
-      });
-      if (state.drawingTime <= 0) {
-        state.phase = "guessing";
-        io.to(roomId).emit("setPhase", {
-          phase: "guessing",
-          hint: "_ ".repeat(state.currentWord.length),
-        });
-      }
-    } else {
-      state.guessingTime--;
-      io.to(roomId).emit("timeUpdate", {
-        time: state.guessingTime,
-        phase: "guessing",
-      });
-      if (state.guessingTime <= 0) {
-        clearInterval(timer);
-        endRound(roomId);
-      }
-    }
-  }, 1000);
-}
-
+// Terminarea rundei
 function endRound(roomId) {
   const state = gameState.get(roomId);
   if (!state) return;
+  const drawerSocket = io.sockets.sockets.get(state.drawerId);
 
   io.to(roomId).emit("roundEnded", {
+    drawer: drawerSocket?.username,
     word: state.currentWord,
-    drawer: io.sockets.sockets.get(state.drawerId)?.username,
   });
 
-  // Runda următoare după 5s
-  setTimeout(() => startRound(roomId), 5000);
+  gameState.delete(roomId);
 }
 
 server.listen(3001, () => {
