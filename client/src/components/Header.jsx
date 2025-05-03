@@ -1,6 +1,13 @@
+// Header.jsx
 import React from "react";
 
 export default function Header({ roomId, isCreator, users, game, onStartGame }) {
+  const phaseLabel = game.phase === "drawing" || game.phase === "select-word"
+    ? "🎨 Desenare"
+    : game.phase === "waiting"
+      ? "⌛ Așteptare"
+      : "🔍 Ghicit";
+
   return (
     <div style={styles.header}>
       <h3>
@@ -8,9 +15,7 @@ export default function Header({ roomId, isCreator, users, game, onStartGame }) 
         {isCreator && <span style={styles.badge}>Creator</span>}
       </h3>
       <p>👥 Jucători: {users.join(", ")}</p>
-      <p>
-        {game.phase === "drawing" ? "🎨 Desenare" : "🔍 Ghicit"} | Timp: {game.timeLeft}s
-      </p>
+      <p>{phaseLabel} | Timp: {game.timeLeft}s</p>
       {isCreator && game.phase === "waiting" && (
         <button onClick={onStartGame} style={styles.startBtn}>
           Start Joc

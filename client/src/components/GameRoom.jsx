@@ -1,22 +1,14 @@
+// GameRoom.jsx
 import React from "react";
 import Header from "./Header";
 import Chat from "./Chat";
-import GuessingPhase from "./GuessingPhase";
-import WinnerDisplay from "./WinnerDisplay";
 import DrawingBoard from "./DrawingBoard";
+import WinnerDisplay from "./WinnerDisplay";
 
-export default function GameRoom({
-  socket,
-  roomId,
-  isCreator,
-  users,
-  game,
-  messages,
-  onStartGame,
-  onSendMessage,
-  onGuess,
-  username
-}) {
+export default function GameRoom(props) {
+  const { socket, roomId, isCreator, users, game, messages, onStartGame, onSendMessage, username } = props;
+  const isDrawer = game.drawer === username;
+
   return (
     <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
       <Header
@@ -27,25 +19,18 @@ export default function GameRoom({
         onStartGame={onStartGame}
       />
 
-      {game.phase === "drawing" && (
-        <DrawingBoard
-                socket={socket}
-                isDrawer={game.drawer === username}
-                gamePhase={game.phase}
-                currentWord={game.currentWord}
-                />
-      )}
+      <DrawingBoard
+        socket={socket}
+        isDrawer={isDrawer}
+        currentWord={game.currentWord}
+        phase={game.phase}
+      />
 
-      {game.phase === "guessing" && game.drawer !== username && (
-        <GuessingPhase
-          drawer={game.drawer}
-          hint={game.hint}
-          timeLeft={game.timeLeft}
-          onGuess={onGuess}
-        />
-      )}
-
-      <Chat messages={messages} onSendMessage={onSendMessage} />
+      <Chat
+        messages={messages}
+        onSendMessage={onSendMessage}
+        isDrawer={isDrawer}    // <-- nou
+      />
 
       {game.lastWinner && <WinnerDisplay winner={game.lastWinner} />}
     </div>

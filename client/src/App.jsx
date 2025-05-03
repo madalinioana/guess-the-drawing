@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useEffect, useState } from "react";
 import socket from "./socket";
 import Lobby from "./components/Lobby";
@@ -15,7 +16,6 @@ function App() {
     phase: "waiting",
     timeLeft: 0,
     currentWord: "",
-    hint: "",
     drawer: "",
     lastWinner: ""
   });
@@ -42,9 +42,8 @@ function App() {
         ...prev,
         phase: data.phase,
         currentWord: data.word || "",
-        hint: data.hint || "",
         drawer: data.drawer || "",
-        timeLeft: data.phase === "drawing" ? 30 : 60
+        timeLeft: data.time != null ? data.time : prev.timeLeft
       }))
     );
 
@@ -60,11 +59,20 @@ function App() {
       setGame(prev => ({ ...prev, lastWinner: `${username} a ghicit "${word}"` }));
     });
 
+    socket.on("roundEnded", ({ drawer, word }) => {
+      setGame(prev => ({
+        ...prev,
+        phase: "waiting",
+        currentWord: "",
+        drawer: "",
+        timeLeft: 0,
+        lastWinner: `${drawer} a desenat “${word}”`
+      }));
+    });
+
     socket.on("error", msg => alert(msg));
 
-    return () => {
-      socket.off();
-    };
+    return () => socket.off();
   }, []);
 
   const handleCreateRoom = () => {
@@ -81,9 +89,6 @@ function App() {
     if (msg.trim() && roomId) {
       socket.emit("message", msg);
     }
-  };
-  const handleGuess = guess => {
-    if (guess.trim()) socket.emit("guess", guess);
   };
 
   return !roomId ? (
@@ -105,7 +110,6 @@ function App() {
       messages={messages}
       onStartGame={handleStartGame}
       onSendMessage={handleSendMessage}
-      onGuess={handleGuess}
       username={username}
     />
   );
