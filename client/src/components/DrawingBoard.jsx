@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line } from 'react-konva';
+import eraserIcon from './eraser_PNG52.png'; // Importă imaginea cu radiera
+
+const COLORS = ['#000', '#f44336', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
+const ERASER_COLOR = 'white';
 
 export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
   const [lines, setLines] = useState([]);
@@ -7,8 +11,11 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [wordInput, setWordInput] = useState("");
   const containerRef = useRef(null);
+  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [isErasing, setIsErasing] = useState(false);
+  const [strokeWidth, setStrokeWidth] = useState(5); // Grosimea inițială a liniei
 
-  // Responsivitate
+
   useEffect(() => {
     const measure = () => {
       if (containerRef.current) {
@@ -22,7 +29,7 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  // Primi desen pentru ceilalti
+
   useEffect(() => {
     if (!isDrawer) {
       socket.on('receive-drawing', newLines => setLines(newLines));
@@ -34,7 +41,7 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     };
   }, [isDrawer, socket]);
 
-  // Trimite desen la mouse up
+
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       if (isDrawing) {
@@ -50,7 +57,8 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
   const handleMouseDown = e => {
     if (!isDrawer || phase !== 'drawing') return;
     const pos = e.target.getStage().getPointerPosition();
-    setLines([...lines, { points: [pos.x, pos.y] }]);
+    const color = isErasing ? ERASER_COLOR : selectedColor;
+    setLines([...lines, { points: [pos.x, pos.y], color: color, strokeWidth }]); // Include grosimea liniei
     setIsDrawing(true);
   };
 
@@ -72,6 +80,17 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     socket.emit('clear-board');
   };
 
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    setIsErasing(false);
+  };
+
+  const handleEraserClick = () => {
+    setIsErasing(true);
+  };
+
+  const handleStrokeWidthChange = (event) => {
+    setStrokeWidth(parseInt(event.target.value, 10));}
   // Trimite cuvant selectat
   const submitWord = () => {
     const trimmed = wordInput.trim().toLowerCase();
@@ -131,7 +150,59 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
         </p>
       )}
 
-      {/* Canvas */}
+
+      {isDrawer && (
+        <div style={{ marginBottom: 15, display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginRight: 15 }}>
+            {COLORS.map((color) => (
+              <div
+                key={color}
+                style={{
+                  display: 'inline-block',
+                  width: 24,
+                  height: 24,
+                  backgroundColor: color,
+                  borderRadius: 4,
+                  marginRight: 8,
+                  cursor: 'pointer',
+                  border: selectedColor === color && !isErasing ? '2px solid #000' : 'none',
+                }}
+                onClick={() => handleColorChange(color)}
+              />
+            ))}
+            <button
+              style={{
+                padding: '6px 10px',
+                borderRadius: 4,
+                cursor: 'pointer',
+                marginLeft: 10,
+                backgroundColor: isErasing ? '#e6b7b726' : '#e0e0e0', // Indică vizual când radiera e activă
+                border: isErasing ? '2px solid #000' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              onClick={handleEraserClick}
+            >
+              <img src={eraserIcon} alt="Radieră" style={{ width: 20, height: 20, marginRight: 5 }} />
+        
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <label htmlFor="strokeWidth" style={{ marginRight: 8 }}>Grosime:</label>
+            <input
+              type="number"
+              id="strokeWidth"
+              value={strokeWidth}
+              min="1"
+              max="20"
+              onChange={handleStrokeWidthChange}
+              style={{ width: 50, borderRadius: 4, border: '1px solid #ccc', padding: '4px' }}
+            />
+          </div>
+        </div>
+      )}
+
       <div
         ref={containerRef}
         style={{
@@ -155,8 +226,8 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
               <Line
                 key={i}
                 points={line.points}
-                stroke="#000"
-                strokeWidth={5}
+                stroke={line.color}
+                strokeWidth={line.strokeWidth} // Folosim grosimea stocată în starea liniei
                 lineCap="round"
                 lineJoin="round"
               />
@@ -179,7 +250,7 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
             cursor: 'pointer'
           }}
         >
-          Șterge desenul
+          Șterge desenul complet
         </button>
       )}
     </div>
