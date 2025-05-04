@@ -4,9 +4,10 @@ import Header from "./Header";
 import Chat from "./Chat";
 import DrawingBoard from "./DrawingBoard";
 import WinnerDisplay from "./WinnerDisplay";
+import Leaderboard from "./Leaderboard";
 
 export default function GameRoom(props) {
-  const { socket, roomId, isCreator, users, game, messages, onStartGame, onSendMessage, username } = props;
+  const { socket, roomId, isCreator, users, game, messages, onStartGame, onSendMessage, username, scores} = props;
   const isDrawer = game.drawer === username;
 
   return (
@@ -31,6 +32,7 @@ export default function GameRoom(props) {
         onSendMessage={onSendMessage}
         isDrawer={isDrawer}    // <-- nou
       />
+      <Leaderboard scores={scores} />
 
       {game.lastWinner && <WinnerDisplay winner={game.lastWinner} />}
     </div>

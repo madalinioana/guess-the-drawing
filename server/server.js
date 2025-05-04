@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
+const scores = new Map(); // roomId → Map<username, score>
 
 const app = express();
 app.use(cors());
@@ -47,6 +48,10 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = username;
+    if (!scores.has(roomId)) {
+      scores.set(roomId, new Map());
+    }
+    scores.get(roomId).set(username, 0);
 
     socket.emit("roomCreated", roomId);
     io.to(roomId).emit("updateUsers", getUsers(roomId));
@@ -62,6 +67,10 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = username;
+    if (!scores.has(roomId)) {
+      scores.set(roomId, new Map());
+    }
+    scores.get(roomId).set(username, 0);
 
     socket.emit("roomJoined", {
       roomId,
@@ -134,20 +143,35 @@ io.on("connection", (socket) => {
       message,
     });
 
-    // Dacă este faza de desen și mesajul e exact cuvântul, e ghicit
-    if (
+        if (
       state &&
       state.phase === "drawing" &&
       socket.id !== state.drawerId &&
       message.trim().toLowerCase() === state.currentWord
     ) {
+      const drawerSocket = io.sockets.sockets.get(state.drawerId);
+      const guesserName = socket.username;
+      const drawerName = drawerSocket?.username;
+      const roomScores = scores.get(roomId);
+
+      // ✅ Scoruri
+      if (roomScores) {
+        roomScores.set(guesserName, (roomScores.get(guesserName) || 0) + 10);
+        if (drawerName) {
+          roomScores.set(drawerName, (roomScores.get(drawerName) || 0) + 5);
+        }
+        io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
+      }
+
       io.to(roomId).emit("correctGuess", {
-        username: socket.username,
+        username: guesserName,
         word: state.currentWord,
       });
+
       clearInterval(state.timer);
       endRound(roomId);
     }
+
   });
 
   // Desen: doar broadcast pentru ceilalți
@@ -167,11 +191,14 @@ io.on("connection", (socket) => {
   // Disconectare user
   socket.on("disconnect", () => {
     const roomId = socket.roomId;
+    
     if (roomId && rooms.has(roomId)) {
       rooms.get(roomId).delete(socket.id);
       io.to(roomId).emit("updateUsers", getUsers(roomId));
       if (rooms.get(roomId).size === 0) rooms.delete(roomId);
     }
+    
+
     console.log("❌ Utilizator deconectat:", socket.id);
   });
 });
