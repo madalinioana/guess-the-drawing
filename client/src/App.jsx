@@ -19,6 +19,8 @@ function App() {
     drawer: "",
     lastWinner: ""
   });
+  const [scores, setScores] = useState([]);
+
 
   useEffect(() => {
     socket.on("roomCreated", newRoomId => {
@@ -29,6 +31,9 @@ function App() {
     socket.on("roomJoined", ({ roomId, users }) => {
       setRoomId(roomId);
       setUsersInRoom(users);
+    });
+    socket.on("updateScores", updatedScores => {
+      setScores(updatedScores); // [["Andrei", 10], ["Maria", 5]]
     });
 
     socket.on("updateUsers", users => setUsersInRoom(users));
@@ -111,6 +116,7 @@ function App() {
       onStartGame={handleStartGame}
       onSendMessage={handleSendMessage}
       username={username}
+      scores={scores}
     />
   );
 }
