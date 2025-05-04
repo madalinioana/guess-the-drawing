@@ -63,6 +63,7 @@ io.on("connection", (socket) => {
       socket.emit("error", "Camera nu există!");
       return;
     }
+    
     rooms.get(roomId).add(socket.id);
     socket.join(roomId);
     socket.roomId = roomId;
@@ -90,7 +91,7 @@ io.on("connection", (socket) => {
         drawerId,
         phase: "select-word",
       });
-
+      io.to(roomId).emit('clear-board');
       // Drawer primește comanda de a alege cuvânt
       drawerSocket.emit("setPhase", { phase: "select-word" });
       // Toți ceilalți văd cine este drawer și așteaptă
@@ -153,12 +154,17 @@ io.on("connection", (socket) => {
       const guesserName = socket.username;
       const drawerName = drawerSocket?.username;
       const roomScores = scores.get(roomId);
+      const maxTime = 60; // timpul inițial
+      const timeLeft = state.drawingTime;
+
+      const guesserScore = Math.ceil(10 * (timeLeft / maxTime)); // direct proporțional
+      const drawerScore = Math.ceil(10 * ((maxTime - timeLeft) / maxTime)); // invers proporțional
 
       // ✅ Scoruri
       if (roomScores) {
-        roomScores.set(guesserName, (roomScores.get(guesserName) || 0) + 10);
+        roomScores.set(guesserName, (roomScores.get(guesserName) || 0) + guesserScore);
         if (drawerName) {
-          roomScores.set(drawerName, (roomScores.get(drawerName) || 0) + 5);
+          roomScores.set(drawerName, (roomScores.get(drawerName) || 0) + drawerScore);
         }
         io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
       }
