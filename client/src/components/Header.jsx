@@ -21,6 +21,16 @@ export default function Header({ roomId, isCreator, users, game, onStartGame }) 
           Start Joc
         </button>
       )}
+      <a
+      href={`https://wa.me/?text=${encodeURIComponent(
+        `Join my Scribble game! ${window.location.origin}/room/${roomId}`
+      )}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ marginLeft: isCreator ? 10 : 0 }}
+    >
+      <button style={styles.inviteBtn}>Invită pe WhatsApp</button>
+    </a>
     </div>
   );
 }
@@ -28,5 +38,7 @@ export default function Header({ roomId, isCreator, users, game, onStartGame }) 
 const styles = {
   header: { background: "#f5f5f5", padding: 15, borderRadius: 8, marginBottom: 20 },
   badge: { background: "#FF9800", color: "#fff", padding: "3px 8px", borderRadius: 10, marginLeft: 10 },
-  startBtn: { marginTop: 10, padding: "8px 16px", background: "#9C27B0", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer" }
+  startBtn: { marginTop: 10, padding: "8px 16px", background: "#9C27B0", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer" },
+  inviteBtn: { padding: "8px 16px", background: "#25D366", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer"
+}
 };
