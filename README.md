@@ -28,7 +28,7 @@ A real-time multiplayer drawing game inspired by [Skribbl.io](https://skribbl.io
 - Dynamic scoring system and leaderboard
 - Only the room creator can start the game
 - Kick players from the room
-- Visual feedback for round winners
+- WhatsApp invitation with auto-generated room link
 
 ---
 
@@ -41,4 +41,36 @@ A real-time multiplayer drawing game inspired by [Skribbl.io](https://skribbl.io
 # from the client/ folder
 npm install
 npm test
+```
+
+## ⚙️ How to Run Locally
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/madalinioana/guess-the-drawing
+   cd guess-the-drawing
+   ```
+2. Install dependencies:
+   Backend:
+   ```bash
+   cd server
+   npm install
+   ```
+   Frontend:
+   ```bash
+   cd ../client
+   npm install
+   ```
+3.Run the app:
+  Server:
+  ```bash 
+  node server.js
+  ```
+  Client:
+  ```bash
+  npm run dev
+  ```
+4.Open your browser at http://localhost:5173
+   
+
 
