@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import socket from "./socket";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
@@ -23,7 +23,8 @@ function App() {
   });
   const [scores, setScores] = useState([]);
 
-  // Funcția de leave room
+  const socketIdRef = useRef("");
+
   const handleLeaveRoom = () => {
     socket.emit("leave-room");
     setRoomId("");
@@ -42,6 +43,12 @@ function App() {
   };
 
   useEffect(() => {
+    // Salvăm id-ul local pentru comparare ulterioară
+    socketIdRef.current = socket.id;
+     socket.on("connect", () => {
+      socketIdRef.current = socket.id;
+      console.log("Socket conectat:", socket.id);
+    });
     const handleRoomCreated = (newRoomId) => {
       setRoomId(newRoomId);
       setIsCreator(true);
@@ -53,13 +60,11 @@ function App() {
     };
 
     const handleUpdateUsers = (users) => setUsersInRoom(users);
+    const handleUpdateScores = (updatedScores) => setScores(updatedScores);
 
-    const handleUpdateScores = (updatedScores) => {
-      setScores(updatedScores);
-    };
-
-    const handleMessage = (data) =>
+    const handleMessage = (data) => {
       setMessages(prev => [...prev, data]);
+    };
 
     const handleSetPhase = (data) =>
       setGame(prev => ({
@@ -94,16 +99,17 @@ function App() {
 
     const handlePlayerKicked = () => {
       toast.error("Ai fost dat afară din cameră.");
-      handleLeaveRoom(); // efectuează și reset local
+      handleLeaveRoom();
     };
 
-    const handleCreatorChanged = (newCreatorSocketId) => {
-       if (socket.username === username) {
-          setIsCreator(true);
-          toast.info("Ai devenit noul creator.");
-        } else {
-          setIsCreator(false);
-        }
+    const handleCreatorChanged = ({ socketId, username: newCreatorName }) => {
+      const isNewCreator = socketId === socketIdRef.current;
+      setIsCreator(isNewCreator);
+      if (isNewCreator) {
+        toast.info("Ai devenit noul creator.");
+      } else {
+        toast(`${newCreatorName} este acum creatorul.`);
+      }
     };
 
     socket.on("roomCreated", handleRoomCreated);
