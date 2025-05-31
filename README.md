@@ -51,6 +51,7 @@ npm test
    cd guess-the-drawing
    ```
 2. Install dependencies:
+   
    Backend:
    ```bash
    cd server
@@ -61,16 +62,17 @@ npm test
    cd ../client
    npm install
    ```
-3.Run the app:
-  Server:
-  ```bash 
-  node server.js
-  ```
-  Client:
-  ```bash
-  npm run dev
-  ```
-4.Open your browser at http://localhost:5173
+4. Run the app:
+   
+   Server:
+   ```bash 
+   node server.js
+   ```
+   Client:
+   ```bash
+   npm run dev
+   ```
+5. Open your browser at http://localhost:5173
    
 
 
