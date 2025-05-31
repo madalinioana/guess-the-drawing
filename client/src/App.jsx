@@ -3,6 +3,9 @@ import React, { useEffect, useState } from "react";
 import socket from "./socket";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
+
 import "./App.css";
 
 function App() {
@@ -74,10 +77,14 @@ function App() {
         lastWinner: `${drawer} a desenat “${word}”`
       }));
     });
-
-    socket.on("error", msg => alert(msg));
-
-    return () => socket.off();
+    socket.on("players-update", (players) => {
+      setUsersInRoom(players); // players este [{ id, name }]
+    });
+    return () => {
+      socket.on("error", msg => alert(msg));
+      socket.off("players-update");
+      };
+    
   }, []);
 
   const handleCreateRoom = () => {
@@ -95,29 +102,40 @@ function App() {
       socket.emit("message", msg);
     }
   };
-
-  return !roomId ? (
-    <Lobby
-      username={username}
-      setUsername={setUsername}
-      inputRoomId={inputRoomId}
-      setInputRoomId={setInputRoomId}
-      onCreateRoom={handleCreateRoom}
-      onJoinRoom={handleJoinRoom}
-    />
-  ) : (
-    <GameRoom
-      socket={socket}
-      roomId={roomId}
-      isCreator={isCreator}
-      users={usersInRoom}
-      game={game}
-      messages={messages}
-      onStartGame={handleStartGame}
-      onSendMessage={handleSendMessage}
-      username={username}
-      scores={scores}
-    />
+return (
+  <>
+    {!roomId ? (
+      <Lobby
+        username={username}
+        setUsername={setUsername}
+        inputRoomId={inputRoomId}
+        setInputRoomId={setInputRoomId}
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleJoinRoom}
+      />
+    ) : (
+      <GameRoom
+        socket={socket}
+        roomId={roomId}
+        isCreator={isCreator}
+        users={usersInRoom}
+        game={game}
+        messages={messages}
+        onStartGame={handleStartGame}
+        onSendMessage={handleSendMessage}
+        username={username}
+        scores={scores}
+      />
+    )}
+    <ToastContainer
+  position="top-center"
+  autoClose={4000}
+  hideProgressBar={false}
+  newestOnTop
+  pauseOnFocusLoss
+  draggable
+/>
+  </>
   );
 }
 

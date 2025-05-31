@@ -14,7 +14,7 @@ export default function Header({ roomId, isCreator, users, game, onStartGame }) 
         Camera: {roomId}
         {isCreator && <span style={styles.badge}>Creator</span>}
       </h3>
-      <p>👥 Jucători: {users.join(", ")}</p>
+      <p>Jucători: {users.map(u => u.name).join(", ")}</p>
       <p>{phaseLabel} | Timp: {game.timeLeft}s</p>
       {isCreator && game.phase === "waiting" && (
         <button onClick={onStartGame} style={styles.startBtn}>

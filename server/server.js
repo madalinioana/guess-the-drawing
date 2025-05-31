@@ -20,15 +20,14 @@ const io = new Server(server, {
 const gameState = new Map(); // roomId → { drawerId, currentWord, drawingTime, phase, timer }
 const rooms = new Map();     // roomId → Set<socket.id>
 
-// Helper pentru lista de utilizatori
-function getUsers(roomId) {
-  const ids = rooms.get(roomId) || new Set();
-  return Array.from(ids).map(id => {
-    const s = io.sockets.sockets.get(id);
-    return s?.username || "Guest";
-  });
+// Generează un ID unic de 4 cifre
+function generateRoomId() {
+  let roomId;
+  do {
+    roomId = Math.floor(1000 + Math.random() * 9000).toString();
+  } while (rooms.has(roomId));
+  return roomId;
 }
-
 // Generează un ID unic de 4 cifre
 function generateRoomId() {
   let roomId;
@@ -38,9 +37,22 @@ function generateRoomId() {
   return roomId;
 }
 
+function getUsers(roomId) {
+  const ids = rooms.get(roomId) || new Set();
+  return Array.from(ids).map(id => {
+    const s = io.sockets.sockets.get(id);
+    return s ? { id, name: s.username } : null;
+  }).filter(Boolean);
+}
+
 io.on("connection", (socket) => {
   console.log("✅ Utilizator conectat:", socket.id);
-
+  for (const [roomId, socketsSet] of rooms.entries()) {
+    if (socketsSet.has(socket.id)) {
+      socketsSet.delete(socket.id);
+      io.to(roomId).emit("players-update", getUsers(roomId));
+    }
+  }
   // Creare cameră nouă
   socket.on("createRoom", (username) => {
     const roomId = generateRoomId();
@@ -57,6 +69,20 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("updateUsers", getUsers(roomId));
   });
 
+   socket.on("kick-player", ({ targetId, roomId }) => {
+     console.log("⚡ kick-player primit:", targetId, roomId);
+    const room = rooms.get(roomId);
+    if (room && room.has(targetId)) {
+      io.to(targetId).emit("kicked");
+      io.sockets.sockets.get(targetId)?.disconnect();
+      room.delete(targetId);
+      io.to(roomId).emit("players-update", getUsers(roomId));
+      console.log(`Player ${targetId} was kicked from room ${roomId}`);
+  }
+});
+
+
+
   // Alăturare la cameră existentă
   socket.on("joinRoom", ({ roomId, username }) => {
     if (!rooms.has(roomId)) {
@@ -72,6 +98,13 @@ io.on("connection", (socket) => {
       scores.set(roomId, new Map());
     }
     scores.get(roomId).set(username, 0);
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, new Set());
+    }
+    rooms.get(roomId).add(socket.id);
+    socket.username = username;
+
+    io.to(roomId).emit("players-update", getUsers(roomId));
 
     socket.emit("roomJoined", {
       roomId,
