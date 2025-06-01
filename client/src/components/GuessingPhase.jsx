@@ -12,20 +12,22 @@ export default function GuessingPhase({ drawer, hint, timeLeft, onGuess }) {
   return (
     <div className="guessing-phase-container">
       <p className="guessing-text">
-        Ghicește desenul lui <strong>{drawer}</strong>
+        Guess <strong>{drawer}</strong>'s drawing
       </p>
       <div className="guessing-input-group">
         <input
           value={guess}
           onChange={e => setGuess(e.target.value)}
           onKeyPress={e => e.key === "Enter" && send()}
-          placeholder="Răspuns..."
+          placeholder="Answer..."
           className="guessing-input"
         />
-        <button onClick={send} className="guessing-button">Trimite</button>
+        <button onClick={send} className="guessing-button">Send</button>
       </div>
-      <p className="guessing-hint">Indiciu: <span className="guessing-hint-value">{hint}</span></p>
-      <p className="guessing-timer">⏳ Timp rămas: {timeLeft}s</p>
+      <p className="guessing-hint">
+        Hint: <span className="guessing-hint-value">{hint}</span>
+      </p>
+      <p className="guessing-timer">⏳ Time left: {timeLeft}s</p>
     </div>
   );
 }

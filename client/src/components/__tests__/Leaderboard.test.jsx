@@ -12,7 +12,6 @@ describe("Leaderboard component", () => {
       ["Ana", 5],
     ];
     render(<Leaderboard scores={scores} />);
-
     const items = screen.getAllByRole("listitem");
     
     // Verificăm conținutul text simplificat: "1. Bogdan: 10p", "2. Maria: 8p", "3. Ana: 5p"

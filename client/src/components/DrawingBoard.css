@@ -1,4 +1,3 @@
-/* Stil general pentru fundal și text */
 body {
   margin: 0;
   font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -7,7 +6,7 @@ body {
 }
 
 .drawing-board {
-  background-color: #ffffff;
+  background-color: #ffff66;
   padding: 20px;
   border: 4px solid #000;
   box-shadow: 6px 6px 0 #000;
@@ -15,7 +14,6 @@ body {
   font-family: 'Comic Sans MS', cursive;
 }
 
-/* Titluri și texte evidențiate */
 .bold-text,
 .draw-instruction {
   font-weight: bold;
@@ -29,26 +27,23 @@ body {
   font-weight: bold;
 }
 
-/* Input pentru cuvânt */
 .word-input {
   flex: 1;
   padding: 10px;
   border: 3px solid #000;
   font-size: 1rem;
-  background-color: #ffff66;
+  background-color: #ffffcc;
   font-family: 'Comic Sans MS', cursive;
   color: #000;
   border-radius: 0;
 }
 
-/* Grup input + buton */
 .select-word .input-group {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
 }
 
-/* Butoane */
 .btn {
   border: 3px solid #000;
   cursor: pointer;
@@ -78,7 +73,6 @@ body {
   margin-top: 10px;
 }
 
-/* Toolbar: culori și grosime */
 .tools-bar {
   display: flex;
   align-items: center;
@@ -105,7 +99,6 @@ body {
   box-shadow: inset 0 0 0 2px #fff;
 }
 
-/* Radieră */
 .eraser-btn {
   background-color: #cccccc;
   border: 3px solid #000;
@@ -125,7 +118,6 @@ body {
   height: 20px;
 }
 
-/* Grosime linie */
 .stroke-width-control {
   display: flex;
   align-items: center;
@@ -137,13 +129,12 @@ body {
   padding: 5px;
   font-size: 1rem;
   border: 3px solid #000;
-  background-color: #ffff66;
+  background-color: #ffffcc;
   color: #000;
   border-radius: 0;
   font-family: 'Comic Sans MS', cursive;
 }
 
-/* Canvas */
 .canvas-container {
   width: 100%;
   border: 4px solid #000;

@@ -28,7 +28,7 @@ export default function GameRoom(props) {
     if (!socket) return;
 
     const handleKicked = () => {
-      toast.error("Ai fost dat afară din cameră!");
+      toast.error("You have been kicked from the room!");
       setTimeout(() => {
         window.location.href = "/";
       }, 3000);
@@ -45,7 +45,7 @@ export default function GameRoom(props) {
 
   const handleKick = (targetName) => {
     const targetId = getSocketId(targetName);
-    toast(`${targetName} a fost dat afară`);
+    toast(`${targetName} has been kicked`);
     console.log("Kick →", targetName, targetId);
     if (targetId) {
       socket.emit("kick-player", { targetId, roomId });
@@ -82,7 +82,7 @@ export default function GameRoom(props) {
 
       {isCreator && (
         <div className="kick-panel">
-          <h3 className="kick-title">Gestionează jucători</h3>
+          <h3 className="kick-title">Manage Players</h3>
           {users
             .filter((user) => user.name !== username)
             .map((user) => (

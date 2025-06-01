@@ -24,8 +24,8 @@
   flex-direction: column;
   z-index: 1000;
   box-sizing: border-box;
-  overflow-y: visible; /* să nu aibă scroll */
-  max-height: none; /* să nu limiteze înălțimea */
+  overflow-y: visible;
+  max-height: none;
 }
 
 .kick-title {

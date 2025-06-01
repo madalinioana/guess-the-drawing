@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import socket from "./socket";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer, toast } from 'react-toastify';
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./ToastOverrides.css";
 import "./App.css";
 
 function App() {
@@ -39,16 +39,21 @@ function App() {
       drawer: "",
       lastWinner: ""
     });
-    toast.info("Ai părăsit camera.");
+    toast.info(
+      <div className="custom-toast-info">
+        You have left the room.
+      </div>
+    );
   };
 
   useEffect(() => {
-    // Salvăm id-ul local pentru comparare ulterioară
     socketIdRef.current = socket.id;
-     socket.on("connect", () => {
+
+    socket.on("connect", () => {
       socketIdRef.current = socket.id;
       console.log("Socket conectat:", socket.id);
     });
+
     const handleRoomCreated = (newRoomId) => {
       setRoomId(newRoomId);
       setIsCreator(true);
@@ -63,11 +68,11 @@ function App() {
     const handleUpdateScores = (updatedScores) => setScores(updatedScores);
 
     const handleMessage = (data) => {
-      setMessages(prev => [...prev, data]);
+      setMessages((prev) => [...prev, data]);
     };
 
     const handleSetPhase = (data) =>
-      setGame(prev => ({
+      setGame((prev) => ({
         ...prev,
         phase: data.phase,
         currentWord: data.word || "",
@@ -76,29 +81,58 @@ function App() {
       }));
 
     const handleTimeUpdate = ({ time }) =>
-      setGame(prev => ({ ...prev, timeLeft: time }));
+      setGame((prev) => ({ ...prev, timeLeft: time }));
 
-    const handleCorrectGuess = ({ username, word }) => {
-      setMessages(prev => [
+    const handleCorrectGuess = ({ username }) => {
+      setMessages((prev) => [
         ...prev,
-        { username: "System", message: `${username} a ghicit !!` }
+        { username: "System", message: `${username} guessed!` }
       ]);
-      setGame(prev => ({ ...prev, lastWinner: `${username} a ghicit !!` }));
+      setGame((prev) => ({ ...prev, lastWinner: `${username} guessed` }));
+      toast.success(
+        <div className="custom-toast-success">
+          🎉 <strong>{username}</strong> guessed correctly!
+        </div>,
+        {
+          position: "top-center",
+          autoClose: 4000,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      );
     };
 
     const handleRoundEnded = ({ drawer, word }) => {
-      setGame(prev => ({
+      setGame((prev) => ({
         ...prev,
         phase: "waiting",
         currentWord: "",
         drawer: "",
         timeLeft: 0,
-        lastWinner: `${drawer} a desenat “${word}”`
+        lastWinner: `${drawer} drew "${word}"`
       }));
+
+      toast.info(
+        <div className="custom-toast-info">
+          🎉 <strong>{drawer}</strong> drew <em>"{word}"</em>
+        </div>,
+        {
+          position: "top-center",
+          autoClose: 5000,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        }
+      );
     };
 
     const handlePlayerKicked = () => {
-      toast.error("Ai fost dat afară din cameră.");
+      toast.error(
+        <div className="custom-toast-error">
+          ❌ You have been kicked from the room.
+        </div>
+      );
       handleLeaveRoom();
     };
 
@@ -106,9 +140,17 @@ function App() {
       const isNewCreator = socketId === socketIdRef.current;
       setIsCreator(isNewCreator);
       if (isNewCreator) {
-        toast.info("Ai devenit noul creator.");
+        toast.info(
+          <div className="custom-toast-info">
+            You are now the new creator.
+          </div>
+        );
       } else {
-        toast(`${newCreatorName} este acum creatorul.`);
+        toast(
+          <div className="custom-toast-info">
+            {newCreatorName} is now the creator.
+          </div>
+        );
       }
     };
 
@@ -124,7 +166,11 @@ function App() {
     socket.on("kicked", handlePlayerKicked);
     socket.on("creator-changed", handleCreatorChanged);
     socket.on("players-update", handleUpdateUsers);
-    socket.on("error", (msg) => toast.error(msg));
+    socket.on("error", (msg) =>
+      toast.error(
+        <div className="custom-toast-error">{msg}</div>
+      )
+    );
 
     return () => {
       socket.off("roomCreated", handleRoomCreated);
@@ -154,13 +200,17 @@ function App() {
 
   const handleStartGame = () => {
     if (usersInRoom.length < 2) {
-      toast.warn("Ai nevoie de cel puțin 2 jucători pentru a porni jocul.");
+      toast.warn(
+        <div className="custom-toast-warn">
+          ⚠️ You need at least <strong>2 players</strong> to start the game.
+        </div>
+      );
       return;
     }
     if (roomId) socket.emit("startGame", roomId);
   };
 
-  const handleSendMessage = msg => {
+  const handleSendMessage = (msg) => {
     if (msg.trim() && roomId) {
       socket.emit("message", msg);
     }
