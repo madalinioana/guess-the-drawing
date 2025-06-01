@@ -1,0 +1,155 @@
+/* Stil general pentru fundal și text */
+body {
+  margin: 0;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background-color: #fff8dc;
+  color: #000;
+}
+
+.drawing-board {
+  background-color: #ffffff;
+  padding: 20px;
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0 #000;
+  margin-bottom: 20px;
+  font-family: 'Comic Sans MS', cursive;
+}
+
+/* Titluri și texte evidențiate */
+.bold-text,
+.draw-instruction {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  text-shadow: 1px 1px #000;
+}
+
+.highlight-word {
+  color: #ff0033;
+  font-weight: bold;
+}
+
+/* Input pentru cuvânt */
+.word-input {
+  flex: 1;
+  padding: 10px;
+  border: 3px solid #000;
+  font-size: 1rem;
+  background-color: #ffff66;
+  font-family: 'Comic Sans MS', cursive;
+  color: #000;
+  border-radius: 0;
+}
+
+/* Grup input + buton */
+.select-word .input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* Butoane */
+.btn {
+  border: 3px solid #000;
+  cursor: pointer;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 #000;
+  border-radius: 0;
+  transition: all 0.1s ease;
+}
+
+.btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.btn-primary {
+  background-color: #0066ff;
+  color: #fff;
+}
+
+.btn-danger {
+  background-color: #ff0033;
+  color: #fff;
+  margin-top: 10px;
+}
+
+/* Toolbar: culori și grosime */
+.tools-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.colors-container {
+  display: flex;
+  align-items: center;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  margin-right: 5px;
+  border: 3px solid #000;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+.color-swatch.selected {
+  outline: 3px solid #000;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+/* Radieră */
+.eraser-btn {
+  background-color: #cccccc;
+  border: 3px solid #000;
+  padding: 5px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  display: flex;
+  align-items: center;
+}
+
+.eraser-btn.active {
+  background-color: #ffcc00;
+}
+
+.eraser-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Grosime linie */
+.stroke-width-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stroke-input {
+  width: 50px;
+  padding: 5px;
+  font-size: 1rem;
+  border: 3px solid #000;
+  background-color: #ffff66;
+  color: #000;
+  border-radius: 0;
+  font-family: 'Comic Sans MS', cursive;
+}
+
+/* Canvas */
+.canvas-container {
+  width: 100%;
+  border: 4px solid #000;
+  background-color: #fff;
+  border-radius: 0;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: 4px 4px 0 #000;
+}

@@ -1,5 +1,6 @@
-// Header.jsx
 import React from "react";
+import "./Header.css";
+
 
 export default function Header({ roomId, isCreator, users, game, onStartGame, onLeaveRoom}) {
   const phaseLabel = game.phase === "drawing" || game.phase === "select-word"
@@ -9,10 +10,10 @@ export default function Header({ roomId, isCreator, users, game, onStartGame, on
       : "🔍 Ghicit";
 
   return (
-    <div style={styles.header}>
-      <h3>
+    <div className="header-container">
+      <h3 className="header-title">
         Camera: {roomId}
-        {isCreator && <span style={styles.badge}>Creator</span>}
+        {isCreator && <span className="creator-badge">Creator</span>}
       </h3>
       <p>Jucători: {users.map(u => u.name).join(", ")}</p>
       <p>{phaseLabel} | Timp: {game.timeLeft}s</p>

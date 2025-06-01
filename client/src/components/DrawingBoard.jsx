@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line } from 'react-konva';
-import eraserIcon from './eraser_PNG52.png'; // Importă imaginea cu radiera
+import eraserIcon from './eraser_PNG52.png'; // imagine radieră
+import './DrawingBoard.css';
 
 const COLORS = ['#000', '#f44336', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
 const ERASER_COLOR = 'white';
@@ -13,8 +14,7 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
   const containerRef = useRef(null);
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [isErasing, setIsErasing] = useState(false);
-  const [strokeWidth, setStrokeWidth] = useState(5); // Grosimea inițială a liniei
-
+  const [strokeWidth, setStrokeWidth] = useState(5);
 
   useEffect(() => {
     const measure = () => {
@@ -29,7 +29,6 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-
   useEffect(() => {
     if (!isDrawer) {
       socket.on('receive-drawing', newLines => setLines(newLines));
@@ -40,7 +39,6 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
       socket.off('clear-board');
     };
   }, [isDrawer, socket]);
-
 
   useEffect(() => {
     const handleGlobalMouseUp = () => {
@@ -53,16 +51,14 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [isDrawing, lines, socket]);
 
-  // Mouse down only in drawing phase pentru drawer
   const handleMouseDown = e => {
     if (!isDrawer || phase !== 'drawing') return;
     const pos = e.target.getStage().getPointerPosition();
     const color = isErasing ? ERASER_COLOR : selectedColor;
-    setLines([...lines, { points: [pos.x, pos.y], color: color, strokeWidth }]); // Include grosimea liniei
+    setLines([...lines, { points: [pos.x, pos.y], color, strokeWidth }]);
     setIsDrawing(true);
   };
 
-  // Mouse move only in drawing phase
   const handleMouseMove = e => {
     if (!isDrawer || !isDrawing || phase !== 'drawing') return;
     const stage = e.target.getStage();
@@ -73,7 +69,6 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     socket.emit('send-drawing', lines);
   };
 
-  // Clear canvas doar in drawing
   const clearCanvas = () => {
     if (!isDrawer || phase !== 'drawing') return;
     setLines([]);
@@ -89,9 +84,10 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     setIsErasing(true);
   };
 
-  const handleStrokeWidthChange = (event) => {
-    setStrokeWidth(parseInt(event.target.value, 10));}
-  // Trimite cuvant selectat
+  const handleStrokeWidthChange = (e) => {
+    setStrokeWidth(parseInt(e.target.value, 10));
+  };
+
   const submitWord = () => {
     const trimmed = wordInput.trim().toLowerCase();
     if (!trimmed) return;
@@ -100,96 +96,56 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
   };
 
   return (
-    <div style={{
-      backgroundColor: 'white',
-      padding: 20,
-      borderRadius: 8,
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      marginBottom: 20
-    }}>
-      {/* Select-word doar in faza select-word */}
+    <div className="drawing-board">
       {isDrawer && phase === 'select-word' && (
-        <div style={{ marginBottom: 15 }}>
-          <p style={{ fontWeight: 'bold', marginBottom: 10 }}>
-            Alege un cuvânt de desenat:
-          </p>
-          <div style={{ display: 'flex', gap: 10 }}>
+        <div className="select-word">
+          <p className="bold-text">Alege un cuvânt de desenat:</p>
+          <div className="input-group">
             <input 
               value={wordInput}
               onChange={e => setWordInput(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && submitWord()}
               placeholder="Scrie un cuvânt..."
-              style={{ flex: 1, padding: 10, borderRadius: 5, border: '1px solid #ddd' }}
+              className="word-input"
             />
-            <button 
-              onClick={submitWord}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: 5,
-                cursor: 'pointer'
-              }}
-            >
-              Alege
-            </button>
+            <button onClick={submitWord} className="btn btn-primary">Alege</button>
           </div>
         </div>
       )}
 
-      {/* Instrucțiuni desenare doar in drawing */}
       {isDrawer && phase === 'drawing' && (
-        <p style={{ marginBottom: 15, fontWeight: 'bold' }}>
-          Desenează: <span style={{ color: '#E91E63' }}>{currentWord}</span>
+        <p className="bold-text draw-instruction">
+          Desenează: <span className="highlight-word">{currentWord}</span>
         </p>
       )}
       {!isDrawer && phase === 'drawing' && (
-        <p style={{ marginBottom: 15, fontWeight: 'bold' }}>
+        <p className="bold-text draw-instruction">
           Ghicește cuvântul din desen! Scrie răspunsul în chat.
         </p>
       )}
 
-
       {isDrawer && (
-        <div style={{ marginBottom: 15, display: 'flex', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginRight: 15 }}>
-            {COLORS.map((color) => (
+        <div className="tools-bar">
+          <div className="colors-container">
+            {COLORS.map(color => (
               <div
                 key={color}
-                style={{
-                  display: 'inline-block',
-                  width: 24,
-                  height: 24,
-                  backgroundColor: color,
-                  borderRadius: 4,
-                  marginRight: 8,
-                  cursor: 'pointer',
-                  border: selectedColor === color && !isErasing ? '2px solid #000' : 'none',
-                }}
+                className={`color-swatch ${selectedColor === color && !isErasing ? 'selected' : ''}`}
+                style={{ backgroundColor: color }}
                 onClick={() => handleColorChange(color)}
               />
             ))}
             <button
-              style={{
-                padding: '6px 10px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                marginLeft: 10,
-                backgroundColor: isErasing ? '#e6b7b726' : '#e0e0e0', // Indică vizual când radiera e activă
-                border: isErasing ? '2px solid #000' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              className={`eraser-btn ${isErasing ? 'active' : ''}`}
               onClick={handleEraserClick}
+              title="Radieră"
             >
-              <img src={eraserIcon} alt="Radieră" style={{ width: 20, height: 20, marginRight: 5 }} />
-        
+              <img src={eraserIcon} alt="Radieră" className="eraser-icon" />
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <label htmlFor="strokeWidth" style={{ marginRight: 8 }}>Grosime:</label>
+          <div className="stroke-width-control">
+            <label htmlFor="strokeWidth">Grosime:</label>
             <input
               type="number"
               id="strokeWidth"
@@ -197,23 +153,13 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
               min="1"
               max="20"
               onChange={handleStrokeWidthChange}
-              style={{ width: 50, borderRadius: 4, border: '1px solid #ccc', padding: '4px' }}
+              className="stroke-input"
             />
           </div>
         </div>
       )}
 
-      <div
-        ref={containerRef}
-        style={{
-          width: '100%',
-          maxWidth: '100%',
-          border: '2px solid #ddd',
-          borderRadius: 5,
-          overflow: 'hidden',
-          margin: '0 auto'
-        }}
-      >
+      <div ref={containerRef} className="canvas-container">
         <Stage
           width={dimensions.width}
           height={dimensions.height}
@@ -227,7 +173,7 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
                 key={i}
                 points={line.points}
                 stroke={line.color}
-                strokeWidth={line.strokeWidth} // Folosim grosimea stocată în starea liniei
+                strokeWidth={line.strokeWidth}
                 lineCap="round"
                 lineJoin="round"
               />
@@ -236,20 +182,8 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
         </Stage>
       </div>
 
-      {/* Clear doar in drawing */}
       {isDrawer && phase === 'drawing' && (
-        <button
-          onClick={clearCanvas}
-          style={{
-            marginTop: 10,
-            padding: '8px 16px',
-            backgroundColor: '#f44336',
-            color: 'white',
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer'
-          }}
-        >
+        <button onClick={clearCanvas} className="btn btn-danger clear-btn">
           Șterge desenul complet
         </button>
       )}
