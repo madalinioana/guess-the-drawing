@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line } from 'react-konva';
-import eraserIcon from './eraser_PNG52.png'; // imagine radieră
+import eraserIcon from './eraser_PNG52.png';
 import './DrawingBoard.css';
 
 const COLORS = ['#000', '#f44336', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
@@ -99,28 +99,28 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
     <div className="drawing-board">
       {isDrawer && phase === 'select-word' && (
         <div className="select-word">
-          <p className="bold-text">Alege un cuvânt de desenat:</p>
+          <p className="bold-text">Choose a word to draw:</p>
           <div className="input-group">
             <input 
               value={wordInput}
               onChange={e => setWordInput(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && submitWord()}
-              placeholder="Scrie un cuvânt..."
+              placeholder="Type a word..."
               className="word-input"
             />
-            <button onClick={submitWord} className="btn btn-primary">Alege</button>
+            <button onClick={submitWord} className="btn btn-primary">Select</button>
           </div>
         </div>
       )}
 
       {isDrawer && phase === 'drawing' && (
         <p className="bold-text draw-instruction">
-          Desenează: <span className="highlight-word">{currentWord}</span>
+          Draw: <span className="highlight-word">{currentWord}</span>
         </p>
       )}
       {!isDrawer && phase === 'drawing' && (
         <p className="bold-text draw-instruction">
-          Ghicește cuvântul din desen! Scrie răspunsul în chat.
+          Guess the word from the drawing! Type your answer in chat.
         </p>
       )}
 
@@ -138,14 +138,14 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
             <button
               className={`eraser-btn ${isErasing ? 'active' : ''}`}
               onClick={handleEraserClick}
-              title="Radieră"
+              title="Eraser"
             >
-              <img src={eraserIcon} alt="Radieră" className="eraser-icon" />
+              <img src={eraserIcon} alt="Eraser" className="eraser-icon" />
             </button>
           </div>
 
           <div className="stroke-width-control">
-            <label htmlFor="strokeWidth">Grosime:</label>
+            <label htmlFor="strokeWidth">Thickness:</label>
             <input
               type="number"
               id="strokeWidth"
@@ -184,7 +184,7 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
 
       {isDrawer && phase === 'drawing' && (
         <button onClick={clearCanvas} className="btn btn-danger clear-btn">
-          Șterge desenul complet
+          Clear entire drawing
         </button>
       )}
     </div>

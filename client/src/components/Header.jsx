@@ -4,30 +4,30 @@ import "./Header.css";
 export default function Header({ roomId, isCreator, users, game, onStartGame, onLeaveRoom }) {
   const phaseLabel =
     game.phase === "drawing" || game.phase === "select-word"
-      ? "🎨 Desenare"
+      ? "🎨 Drawing"
       : game.phase === "waiting"
-      ? "⌛ Așteptare"
-      : "🔍 Ghicit";
+      ? "⌛ Waiting"
+      : "🔍 Guessing";
 
   return (
     <div className="header-container">
       <h3 className="header-title">
-        Camera: {roomId}
+        Room: {roomId}
         {isCreator && <span className="creator-badge">Creator</span>}
       </h3>
 
-      <p className="header-info">Jucători: {users.map(u => u.name).join(", ")}</p>
-      <p className="header-info">{phaseLabel} | Timp: {game.timeLeft}s</p>
+      <p className="header-info">Players: {users.map(u => u.name).join(", ")}</p>
+      <p className="header-info">{phaseLabel} | Time: {game.timeLeft}s</p>
 
       <div className="header-buttons">
         {isCreator && game.phase === "waiting" && (
           <button onClick={onStartGame} className="start-button">
-            Start Joc
+            Start Game
           </button>
         )}
 
         <button onClick={onLeaveRoom} className="exit-button">
-          Părăsește camera
+          Leave Room
         </button>
 
         <a
@@ -38,7 +38,7 @@ export default function Header({ roomId, isCreator, users, game, onStartGame, on
           rel="noopener noreferrer"
           style={{ textDecoration: "none" }}
         >
-          <button className="whatsapp-button">Invită pe WhatsApp</button>
+          <button className="whatsapp-button">Invite on WhatsApp</button>
         </a>
       </div>
     </div>

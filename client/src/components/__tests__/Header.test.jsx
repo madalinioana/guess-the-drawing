@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import Header from "../Header";
 
 describe("Header component", () => {
-  test("afișează ID-ul camerei", () => {
+  test("displays the room ID", () => {
     render(
       <Header
         roomId="1234"
@@ -13,10 +13,10 @@ describe("Header component", () => {
         onStartGame={() => {}}
       />
     );
-    expect(screen.getByText(/Camera: 1234/)).toBeInTheDocument();
+    expect(screen.getByText(/Room: 1234/)).toBeInTheDocument();
   });
 
-  test("afișează numele jucătorilor", () => {
+  test("displays player names", () => {
     const users = [{ id: "1", name: "Ana" }, { id: "2", name: "George" }];
     render(
       <Header
@@ -30,7 +30,7 @@ describe("Header component", () => {
     expect(screen.getByText(/Ana, George/)).toBeInTheDocument();
   });
 
-  test("afișează badge-ul 'Creator' dacă ești creator", () => {
+  test("shows 'Creator' badge if user is creator", () => {
     render(
       <Header
         roomId="9999"
@@ -43,7 +43,7 @@ describe("Header component", () => {
     expect(screen.getByText(/Creator/)).toBeInTheDocument();
   });
 
-  test("afișează butonul Start doar în faza de așteptare și dacă ești creator", () => {
+  test("shows 'Start Game' button only in waiting phase and if user is creator", () => {
     render(
       <Header
         roomId="7777"
@@ -53,10 +53,10 @@ describe("Header component", () => {
         onStartGame={() => {}}
       />
     );
-    expect(screen.getByText("Start Joc")).toBeInTheDocument();
+    expect(screen.getByText("Start Game")).toBeInTheDocument();
   });
 
-  test("nu afișează butonul Start dacă NU ești creator", () => {
+  test("does not show 'Start Game' button if user is not creator", () => {
     render(
       <Header
         roomId="7777"
@@ -66,7 +66,7 @@ describe("Header component", () => {
         onStartGame={() => {}}
       />
     );
-    const btn = screen.queryByText("Start Joc");
+    const btn = screen.queryByText("Start Game");
     expect(btn).not.toBeInTheDocument();
   });
 });

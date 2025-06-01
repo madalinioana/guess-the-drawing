@@ -6,11 +6,11 @@ export default function Leaderboard({ scores }) {
 
   return (
     <div className="leaderboard-box">
-      <h3 className="leaderboard-title">🏆 Clasament</h3>
+      <h3 className="leaderboard-title">🏆 Leaderboard</h3>
       <ul className="leaderboard-list">
         {sorted.map(([user, score], i) => (
           <li key={user} className="leaderboard-item">
-            {i + 1}. {user}: {score}p
+            {i + 1}. {user}: {score} pts
           </li>
         ))}
       </ul>

@@ -1,0 +1,56 @@
+.Toastify__toast {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 #000 !important;
+  border: 4px solid #000 !important;
+}
+
+.Toastify__toast--info {
+  background-color: #ff0033 !important;
+  color: white !important;
+  text-shadow: 2px 2px #000;
+}
+
+.Toastify__toast--error {
+  background-color: #b00020 !important;
+  color: #fff !important;
+  text-shadow: 2px 2px #000;
+}
+
+.Toastify__toast--warning {
+  background-color: #ff9800 !important;
+  color: black !important;
+  font-weight: 700;
+}
+
+.Toastify__toast strong {
+  color: red;
+}
+
+.Toastify__toast em {
+  font-style: normal;
+  color: #ff9800;
+}
+
+.custom-toast-info {
+  background-color: #ff0033 !important;
+  color: white !important;
+  text-shadow: 2px 2px #000;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 0 !important;
+  box-shadow: 6px 6px 0 #000 !important;
+  border: 4px solid #000 !important;
+}
+
+.custom-toast-info strong {
+  color: #ffff00;
+}
+
+.custom-toast-info em {
+  font-style: normal;
+  color: #ff9800;
+}

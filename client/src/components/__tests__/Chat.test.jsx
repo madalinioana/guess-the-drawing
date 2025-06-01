@@ -8,7 +8,7 @@ describe("Chat component", () => {
     { username: "George", message: "Ce faci?" }
   ];
 
-  test("afișează toate mesajele primite", () => {
+  test("displays all received messages", () => {
     render(<Chat messages={mockMessages} onSendMessage={() => {}} isDrawer={false} />);
 
     expect(screen.getByText("Ana:")).toBeInTheDocument();
@@ -17,54 +17,54 @@ describe("Chat component", () => {
     expect(screen.getByText("Ce faci?")).toBeInTheDocument();
   });
 
-  test("permite scrierea și trimiterea unui mesaj", () => {
+  test("allows typing and sending a message", () => {
     const mockSend = jest.fn();
 
     render(<Chat messages={[]} onSendMessage={mockSend} isDrawer={false} />);
 
-    const input = screen.getByPlaceholderText("Scrie un mesaj.");
+    const input = screen.getByPlaceholderText("Type a message...");
     fireEvent.change(input, { target: { value: "Hello!" } });
 
-    const button = screen.getByText("Trimite");
+    const button = screen.getByText("Send");
     fireEvent.click(button);
 
     expect(mockSend).toHaveBeenCalledWith("Hello!");
   });
 
-  test("resetează inputul după trimitere", () => {
+  test("clears input after sending", () => {
     const mockSend = jest.fn();
 
     render(<Chat messages={[]} onSendMessage={mockSend} isDrawer={false} />);
 
-    const input = screen.getByPlaceholderText("Scrie un mesaj.");
+    const input = screen.getByPlaceholderText("Type a message...");
     fireEvent.change(input, { target: { value: "Test message" } });
-    fireEvent.click(screen.getByText("Trimite"));
+    fireEvent.click(screen.getByText("Send"));
 
-    expect(input.value).toBe(""); // input gol după trimitere
+    expect(input.value).toBe("");
   });
 
-  test("nu trimite mesaj gol", () => {
+  test("does not send empty message", () => {
     const mockSend = jest.fn();
 
     render(<Chat messages={[]} onSendMessage={mockSend} isDrawer={false} />);
-    fireEvent.click(screen.getByText("Trimite"));
+    fireEvent.click(screen.getByText("Send"));
 
     expect(mockSend).not.toHaveBeenCalled();
   });
 
-  test("nu afișează inputul dacă ești drawer", () => {
+  test("does not display input if you are drawer", () => {
     render(<Chat messages={[]} onSendMessage={() => {}} isDrawer={true} />);
 
-    expect(screen.queryByPlaceholderText("Scrie un mesaj.")).not.toBeInTheDocument();
-    expect(screen.getByText(/Nu poți ghici/)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Type a message...")).not.toBeInTheDocument();
+    expect(screen.getByText(/You can't guess while drawing/)).toBeInTheDocument();
   });
 
-  test("trimite mesaj cu Enter", () => {
+  test("sends message with Enter key", () => {
     const mockSend = jest.fn();
 
     render(<Chat messages={[]} onSendMessage={mockSend} isDrawer={false} />);
 
-    const input = screen.getByPlaceholderText("Scrie un mesaj.");
+    const input = screen.getByPlaceholderText("Type a message...");
     fireEvent.change(input, { target: { value: "Enter test" } });
     fireEvent.keyPress(input, { key: "Enter", code: "Enter", charCode: 13 });
 

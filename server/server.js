@@ -14,12 +14,11 @@ const io = new Server(server, {
   },
 });
 
-const scores = new Map();   // roomId → Map<username, score>
-const gameState = new Map(); // roomId → {...}
-const rooms = new Map();     // roomId → Set<socket.id>
-const creators = new Map();  // roomId → socket.id (creator)
+const scores = new Map();
+const gameState = new Map();
+const rooms = new Map();
+const creators = new Map();
 
-// === Funcții utile ===
 function generateRoomId() {
   let roomId;
   do {
@@ -30,17 +29,17 @@ function generateRoomId() {
 
 function getUsers(roomId) {
   const ids = rooms.get(roomId) || new Set();
-  return Array.from(ids).map(id => {
-    const s = io.sockets.sockets.get(id);
-    return s ? { id, name: s.username } : null;
-  }).filter(Boolean);
+  return Array.from(ids)
+    .map(id => {
+      const s = io.sockets.sockets.get(id);
+      return s ? { id, name: s.username } : null;
+    })
+    .filter(Boolean);
 }
 
-// === Logica socket ===
 io.on("connection", (socket) => {
-  console.log("✅ Utilizator conectat:", socket.id);
+  console.log("User connected:", socket.id);
 
-  // Curățare din camere vechi
   for (const [roomId, socketsSet] of rooms.entries()) {
     if (socketsSet.has(socket.id)) {
       socketsSet.delete(socket.id);
@@ -48,7 +47,6 @@ io.on("connection", (socket) => {
     }
   }
 
-  // === Creare cameră ===
   socket.on("createRoom", (username) => {
     const roomId = generateRoomId();
     rooms.set(roomId, new Set([socket.id]));
@@ -56,7 +54,6 @@ io.on("connection", (socket) => {
     socket.roomId = roomId;
     socket.username = username;
 
-    // Init scoruri și creator
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(username, 0);
     creators.set(roomId, socket.id);
@@ -65,10 +62,9 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("updateUsers", getUsers(roomId));
   });
 
-  // === Alăturare cameră ===
   socket.on("joinRoom", ({ roomId, username }) => {
     if (!rooms.has(roomId)) {
-      socket.emit("error", "Camera nu există!");
+      socket.emit("error", "Room does not exist!");
       return;
     }
 
@@ -89,7 +85,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // === Buton START JOC ===
   socket.on("startGame", (roomId) => {
     if (rooms.has(roomId) && rooms.get(roomId).size >= 2) {
       const players = Array.from(rooms.get(roomId));
@@ -111,7 +106,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // === Alege cuvânt ===
   socket.on("select-word", (word) => {
     const roomId = socket.roomId;
     const state = gameState.get(roomId);
@@ -138,7 +132,6 @@ io.on("connection", (socket) => {
     }, 1000);
   });
 
-  // === Chat + verificare ghicit ===
   socket.on("message", (message) => {
     const roomId = socket.roomId;
     const state = gameState.get(roomId);
@@ -189,7 +182,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // === Desenare și ștergere ===
   socket.on("send-drawing", (data) => {
     const roomId = socket.roomId;
     if (roomId) socket.broadcast.to(roomId).emit("receive-drawing", data);
@@ -200,7 +192,6 @@ io.on("connection", (socket) => {
     if (roomId) socket.broadcast.to(roomId).emit("clear-board");
   });
 
-  // === Kick player ===
   socket.on("kick-player", ({ targetId, roomId }) => {
     const room = rooms.get(roomId);
     const targetSocket = io.sockets.sockets.get(targetId);
@@ -223,7 +214,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // === Leave Room ===
   socket.on("leave-room", () => {
     const roomId = socket.roomId;
     const username = socket.username;
@@ -242,14 +232,13 @@ io.on("connection", (socket) => {
         const nextCreator = Array.from(room)[0];
         if (nextCreator) {
           creators.set(roomId, nextCreator);
-         const newCreatorSocket = io.sockets.sockets.get(nextCreator);
-        const newCreatorName = newCreatorSocket?.username || "";
+          const newCreatorSocket = io.sockets.sockets.get(nextCreator);
+          const newCreatorName = newCreatorSocket?.username || "";
 
-        io.to(roomId).emit("creator-changed", {
-          socketId: nextCreator,
-          username: newCreatorName
-        });
-
+          io.to(roomId).emit("creator-changed", {
+            socketId: nextCreator,
+            username: newCreatorName
+          });
         } else {
           creators.delete(roomId);
         }
@@ -262,11 +251,10 @@ io.on("connection", (socket) => {
       delete socket.roomId;
       delete socket.username;
 
-      console.log(`${username} a părăsit camera ${roomId}`);
+      console.log(`${username} left room ${roomId}`);
     }
   });
 
-  // === Deconectare ===
   socket.on("disconnect", () => {
     const roomId = socket.roomId;
     if (roomId && rooms.has(roomId)) {
@@ -274,11 +262,10 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("updateUsers", getUsers(roomId));
       if (rooms.get(roomId).size === 0) rooms.delete(roomId);
     }
-    console.log("❌ Utilizator deconectat:", socket.id);
+    console.log("User disconnected:", socket.id);
   });
 });
 
-// === Terminare rundă ===
 function endRound(roomId, drawerScore) {
   const state = gameState.get(roomId);
   if (!state) return;
@@ -306,5 +293,5 @@ function endRound(roomId, drawerScore) {
 }
 
 server.listen(3001, () => {
-  console.log("🚀 Server running on http://localhost:3001");
+  console.log("Server running on http://localhost:3001");
 });

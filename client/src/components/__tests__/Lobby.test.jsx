@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import Lobby from "../Lobby";
 
 describe("Lobby component", () => {
-  test("afișează inputurile și butoanele", () => {
+  test("displays inputs and buttons", () => {
     render(
       <Lobby
         username=""
@@ -15,13 +15,13 @@ describe("Lobby component", () => {
       />
     );
 
-    expect(screen.getByPlaceholderText("Nume de utilizator")).toBeInTheDocument();
-    expect(screen.getByText("Creează cameră")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("ID Cameră")).toBeInTheDocument();
-    expect(screen.getByText("Alătură-te")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
+    expect(screen.getByText("Create Room")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Room ID")).toBeInTheDocument();
+    expect(screen.getByText("Join")).toBeInTheDocument();
   });
 
-  test("apelează setUsername la scriere în input", () => {
+  test("calls setUsername when typing in input", () => {
     const mockSetUsername = jest.fn();
 
     render(
@@ -35,13 +35,13 @@ describe("Lobby component", () => {
       />
     );
 
-    const input = screen.getByPlaceholderText("Nume de utilizator");
+    const input = screen.getByPlaceholderText("Username");
     fireEvent.change(input, { target: { value: "Bogdan" } });
 
     expect(mockSetUsername).toHaveBeenCalledWith("Bogdan");
   });
 
-  test("apelează onCreateRoom la click pe buton", () => {
+  test("calls onCreateRoom when clicking button", () => {
     const mockCreate = jest.fn();
 
     render(
@@ -55,13 +55,13 @@ describe("Lobby component", () => {
       />
     );
 
-    const btn = screen.getByText("Creează cameră");
+    const btn = screen.getByText("Create Room");
     fireEvent.click(btn);
 
     expect(mockCreate).toHaveBeenCalled();
   });
 
-  test("apelează onJoinRoom la click pe buton", () => {
+  test("calls onJoinRoom when clicking button", () => {
     const mockJoin = jest.fn();
 
     render(
@@ -75,7 +75,7 @@ describe("Lobby component", () => {
       />
     );
 
-    fireEvent.click(screen.getByText("Alătură-te"));
+    fireEvent.click(screen.getByText("Join"));
     expect(mockJoin).toHaveBeenCalled();
   });
 });

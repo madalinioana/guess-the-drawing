@@ -20,10 +20,10 @@ export default function Lobby({
       />
 
       <button onClick={onCreateRoom} className="lobby-button green">
-        Create room
+        Create Room
       </button>
 
-      <p className="lobby-or">sau</p>
+      <p className="lobby-or">or</p>
 
       <input
         className="lobby-input"
