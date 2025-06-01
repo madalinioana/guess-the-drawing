@@ -78,12 +78,12 @@ function App() {
     const handleTimeUpdate = ({ time }) =>
       setGame(prev => ({ ...prev, timeLeft: time }));
 
-    const handleCorrectGuess = ({ username, word }) => {
+    const handleCorrectGuess = ({ username}) => {
       setMessages(prev => [
         ...prev,
-        { username: "System", message: `${username} a ghicit "${word}"!` }
+        { username: "System", message: `${username} a ghicit!` }
       ]);
-      setGame(prev => ({ ...prev, lastWinner: `${username} a ghicit "${word}"` }));
+      setGame(prev => ({ ...prev, lastWinner: `${username} a ghicit` }));
     };
 
     const handleRoundEnded = ({ drawer, word }) => {
