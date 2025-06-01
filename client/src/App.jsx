@@ -81,9 +81,9 @@ function App() {
     const handleCorrectGuess = ({ username, word }) => {
       setMessages(prev => [
         ...prev,
-        { username: "System", message: `${username} a ghicit "${word}"!` }
+        { username: "System", message: `${username} a ghicit !!` }
       ]);
-      setGame(prev => ({ ...prev, lastWinner: `${username} a ghicit "${word}"` }));
+      setGame(prev => ({ ...prev, lastWinner: `${username} a ghicit !!` }));
     };
 
     const handleRoundEnded = ({ drawer, word }) => {
