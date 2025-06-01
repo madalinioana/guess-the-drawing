@@ -4,13 +4,23 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 
 const app = express();
-app.use(cors());
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: FRONTEND_URL,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -30,7 +40,7 @@ function generateRoomId() {
 function getUsers(roomId) {
   const ids = rooms.get(roomId) || new Set();
   return Array.from(ids)
-    .map(id => {
+    .map((id) => {
       const s = io.sockets.sockets.get(id);
       return s ? { id, name: s.username } : null;
     })
@@ -174,7 +184,7 @@ io.on("connection", (socket) => {
         word: state.currentWord,
       });
 
-      const totalPlayers = getUsers(roomId).filter(u => u.name !== drawerName).length;
+      const totalPlayers = getUsers(roomId).filter((u) => u.name !== drawerName).length;
       if (state.guessedPlayers.size === totalPlayers) {
         clearInterval(state.timer);
         endRound(roomId, drawerScore);
@@ -237,7 +247,7 @@ io.on("connection", (socket) => {
 
           io.to(roomId).emit("creator-changed", {
             socketId: nextCreator,
-            username: newCreatorName
+            username: newCreatorName,
           });
         } else {
           creators.delete(roomId);
@@ -273,7 +283,7 @@ function endRound(roomId, drawerScore) {
   const drawerSocket = io.sockets.sockets.get(state.drawerId);
   const drawerName = drawerSocket?.username;
   const roomScores = scores.get(roomId);
-  const totalPlayers = getUsers(roomId).filter(u => u.name !== drawerName).length;
+  const totalPlayers = getUsers(roomId).filter((u) => u.name !== drawerName).length;
 
   if (drawerName && roomScores) {
     const guessedCount = state.guessedPlayers?.size || 0;
@@ -292,6 +302,7 @@ function endRound(roomId, drawerScore) {
   gameState.delete(roomId);
 }
 
-server.listen(3001, () => {
-  console.log("Server running on http://localhost:3001");
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
