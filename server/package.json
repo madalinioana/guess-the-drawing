@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "start": "node server.js",
-  "test": "jest"
+    "start": "node server.js",
+    "test": "jest"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -15,5 +14,9 @@
   "dependencies": {
     "express": "^4.21.2",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "socket.io-client": "^4.8.1"
   }
 }

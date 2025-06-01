@@ -4,7 +4,9 @@ import Chat from "./Chat";
 import DrawingBoard from "./DrawingBoard";
 import WinnerDisplay from "./WinnerDisplay";
 import Leaderboard from "./Leaderboard";
-import {toast} from 'react-toastify';
+import { toast } from "react-toastify";
+import "./GameRoom.css";
+
 export default function GameRoom(props) {
   const {
     socket,
@@ -21,31 +23,27 @@ export default function GameRoom(props) {
 
   const isDrawer = game.drawer === username;
 
-  // === Ascultă dacă ai fost dat afară ===
   useEffect(() => {
     if (!socket) return;
 
     const handleKicked = () => {
-      
-    toast.error("Ai fost dat afară din cameră!");
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 3000); // așteaptă 3 secunde pentru a vedea mesajul
-  };
+      toast.error("Ai fost dat afară din cameră!");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 3000);
+    };
 
     socket.on("kicked", handleKicked);
     return () => socket.off("kicked", handleKicked);
   }, [socket]);
 
-  // === Funcție pentru a obține socketId din username ===
   const getSocketId = (name) => {
-    const userObj = users.find(u => u.name === name);
+    const userObj = users.find((u) => u.name === name);
     return userObj?.id;
   };
 
-  // === Buton de kick doar pentru host ===
   const handleKick = (targetName) => {
-  const targetId = getSocketId(targetName);
+    const targetId = getSocketId(targetName);
     toast(`${targetName} a fost dat afară`);
     console.log("Kick →", targetName, targetId);
     if (targetId) {
@@ -54,7 +52,7 @@ export default function GameRoom(props) {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
+    <div className="game-container">
       <Header
         roomId={roomId}
         isCreator={isCreator}
@@ -81,16 +79,18 @@ export default function GameRoom(props) {
       {game.lastWinner && <WinnerDisplay winner={game.lastWinner} />}
 
       {isCreator && (
-        <div style={{ marginTop: 20 }}>
-          <h3>Gestionează jucători</h3>
+        <div className="kick-panel">
+          <h3 className="kick-title">Gestionează jucători</h3>
           {users
-            .filter(user => user.name !== username)
-            .map(user => (
-              <div key={user.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                <span>{user.name}</span>
-                <button onClick={() => handleKick(user.name)}>Kick</button>
+            .filter((user) => user.name !== username)
+            .map((user) => (
+              <div className="kick-row" key={user.id}>
+                <span className="kick-name">{user.name}</span>
+                <button className="kick-button" onClick={() => handleKick(user.name)}>
+                  Kick
+                </button>
               </div>
-          ))}
+            ))}
         </div>
       )}
     </div>

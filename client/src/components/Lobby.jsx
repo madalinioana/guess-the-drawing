@@ -9,35 +9,32 @@ export default function Lobby({
   onJoinRoom
 }) {
   return (
-    <div style={{ padding: 20, maxWidth: 400, margin: "0 auto" }}>
+    <div className="lobby-container">
+      <h1 className="lobby-title">Guess the Drawing</h1>
+
       <input
-        placeholder="Nume de utilizator"
+        className="lobby-input"
+        placeholder="Username"
         value={username}
         onChange={e => setUsername(e.target.value)}
-        style={styles.input}
       />
 
-      <button onClick={onCreateRoom} style={{ ...styles.btn, background: "#4CAF50" }}>
-        Creează cameră
+      <button onClick={onCreateRoom} className="lobby-button green">
+        Create room
       </button>
 
-      <p style={{ textAlign: "center" }}>Sau</p>
+      <p className="lobby-or">sau</p>
 
       <input
-        placeholder="ID Cameră"
+        className="lobby-input"
+        placeholder="Room ID"
         value={inputRoomId}
         onChange={e => setInputRoomId(e.target.value)}
-        style={styles.input}
       />
 
-      <button onClick={onJoinRoom} style={{ ...styles.btn, background: "#2196F3" }}>
-        Alătură-te
+      <button onClick={onJoinRoom} className="lobby-button blue">
+        Join
       </button>
     </div>
   );
 }
-
-const styles = {
-  input: { padding: 10, width: "100%", marginBottom: 10, borderRadius: 5, border: "1px solid #ddd" },
-  btn: { padding: 10, width: "100%", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer" }
-};

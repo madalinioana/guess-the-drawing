@@ -1,0 +1,116 @@
+.chat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  height: 400px;
+  background-color: #ffff66;
+  padding: 16px;
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0 #000;
+  border-radius: 0;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chat-header h4 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #ff0033;
+  text-shadow: 2px 2px #000;
+  flex-shrink: 0;
+}
+
+.chat-divider {
+  flex-grow: 1;
+  height: 4px;
+  background-color: #000;
+  margin-left: 10px;
+}
+
+.messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  padding: 8px;
+  background-color: #fff;
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  border-radius: 0;
+}
+
+.msg {
+  margin-bottom: 8px;
+  padding: 6px;
+  background-color: #ffffcc;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  font-weight: 700;
+  color: #000;
+  font-size: 0.9rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input-row input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 3px solid #000;
+  border-radius: 0;
+  font-size: 0.95rem;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background-color: #ffff66;
+  color: #000;
+  box-sizing: border-box;
+  outline: none;
+  min-width: 0;
+}
+
+.input-row input:focus {
+  outline: 3px solid #ff0033;
+}
+
+.input-row button {
+  padding: 10px;
+  background-color: #0066ff;
+  color: #fff;
+  border: 3px solid #000;
+  border-radius: 0;
+  cursor: pointer;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 #000;
+  transition: all 0.1s ease;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.input-row button:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.drawer-note {
+  font-style: italic;
+  color: #ff0033;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 700;
+  text-shadow: 2px 2px #000;
+}
