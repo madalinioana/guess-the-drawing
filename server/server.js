@@ -275,30 +275,40 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id);
   });
 });
-
-function endRound(roomId, drawerScore) {
+function endRound(roomId, drawerScore = 10) {
   const state = gameState.get(roomId);
   if (!state) return;
 
   const drawerSocket = io.sockets.sockets.get(state.drawerId);
   const drawerName = drawerSocket?.username;
   const roomScores = scores.get(roomId);
+
+
   const totalPlayers = getUsers(roomId).filter((u) => u.name !== drawerName).length;
 
   if (drawerName && roomScores) {
+  
     const guessedCount = state.guessedPlayers?.size || 0;
-    const proportion = guessedCount / totalPlayers;
-    const drawerPoints = Math.ceil(proportion * drawerScore);
+    const proportion = totalPlayers > 0
+      ? 1 - (guessedCount / totalPlayers)
+      : 1;
 
-    roomScores.set(drawerName, (roomScores.get(drawerName) || 0) + drawerPoints);
+    const baseScore = typeof drawerScore === "number" ? drawerScore : 10;
+    const drawerPoints = Math.ceil(proportion * baseScore);
+
+    roomScores.set(
+      drawerName,
+      (roomScores.get(drawerName) || 0) + drawerPoints
+    );
+
     io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
   }
-
   io.to(roomId).emit("roundEnded", {
     drawer: drawerName,
     word: state.currentWord,
   });
 
+  // Curățăm starea rundei
   gameState.delete(roomId);
 }
 
