@@ -327,8 +327,8 @@ Tests are written using [Jasmine](https://jasmine.github.io/) (frontend) and [Mo
     - should navigate to room on successful join  
 
 _Test results snapshot:_  
-![Unit_Tests_Results](readme_images/unitTest.png)
-![Unit_Tests_Results](readme_images/unitTestServer.png)
+![Unit_Tests_Results](images/unitTest.png)
+![Unit_Tests_Results](images/unitTestServer.png)
 
 ### How to Run Tests
 
