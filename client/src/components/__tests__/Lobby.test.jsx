@@ -23,30 +23,31 @@ describe("Lobby component", () => {
     );
   });
 
-  test("afișează inputurile și butoanele", () => {
-    // Placeholder‐urile reale din componentă sunt "Username" și "Room ID"
+  test("renders both input fields and buttons", () => {
+    // The component uses placeholders "Username" and "Room ID", and buttons "Create Room" and "Join"
     expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
-    expect(screen.getByText("Create room")).toBeInTheDocument();
+    expect(screen.getByText("Create Room")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Room ID")).toBeInTheDocument();
     expect(screen.getByText("Join")).toBeInTheDocument();
   });
 
-  test("apelează setUsername la scriere în input", () => {
-    const input = screen.getByPlaceholderText("Username");
-    fireEvent.change(input, { target: { value: "Bogdan" } });
+  test("calls setUsername when typing into the Username input", () => {
+    const usernameInput = screen.getByPlaceholderText("Username");
+    fireEvent.change(usernameInput, { target: { value: "Bogdan" } });
     expect(mockSetUsername).toHaveBeenCalledWith("Bogdan");
   });
 
-  test("apelează onCreateRoom la click pe butonul Create room", () => {
-    // Mergem pe butonul cu textul exact din componentă
-    const btnCreate = screen.getByText("Create room");
+  test("calls onCreateRoom when the Create Room button is clicked", () => {
+    const btnCreate = screen.getByText("Create Room");
     fireEvent.click(btnCreate);
     expect(mockCreate).toHaveBeenCalled();
   });
 
-  test("apelează onJoinRoom la click pe butonul Join", () => {
-    const inputRoom = screen.getByPlaceholderText("Room ID");
-    fireEvent.change(inputRoom, { target: { value: "9999" } });
+  test("calls onJoinRoom when the Join button is clicked", () => {
+    // First, fill in the Room ID input so that onJoinRoom can be triggered
+    const roomIdInput = screen.getByPlaceholderText("Room ID");
+    fireEvent.change(roomIdInput, { target: { value: "9999" } });
+
     const btnJoin = screen.getByText("Join");
     fireEvent.click(btnJoin);
     expect(mockJoin).toHaveBeenCalled();

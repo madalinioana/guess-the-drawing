@@ -31,15 +31,15 @@ export default function Header({ roomId, isCreator, users, game, onStartGame, on
         </button>
 
         <a
-          href={`https://wa.me/?text=${encodeURIComponent(
-            `Join my Scribble game! ${window.location.origin}/room/${roomId}`
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ textDecoration: "none" }}
-        >
-          <button className="whatsapp-button">Invite on WhatsApp</button>
-        </a>
+        href={`https://wa.me/?text=${encodeURIComponent(
+          `Join my Scribble game! ${window.location.origin}/?room=${roomId}`
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <button className="whatsapp-button">Invite on WhatsApp</button>
+      </a>
+
       </div>
     </div>
   );

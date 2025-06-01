@@ -25,6 +25,16 @@ function App() {
 
   const socketIdRef = useRef("");
 
+   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const inviteRoom = params.get("room");
+    if (inviteRoom) {
+      setInputRoomId(inviteRoom);
+
+      // (Optional) Clean up the URL so the query param disappears:
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
   const handleLeaveRoom = () => {
     socket.emit("leave-room");
     setRoomId("");
@@ -47,6 +57,7 @@ function App() {
   };
 
   useEffect(() => {
+      
     socketIdRef.current = socket.id;
 
     socket.on("connect", () => {

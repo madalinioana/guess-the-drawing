@@ -5,7 +5,7 @@ import { render, screen } from "@testing-library/react";
 import Leaderboard from "../Leaderboard";
 
 describe("Leaderboard component", () => {
-  test("afișează scorurile în ordine descrescătoare cu 'p'", () => {
+  test("displays scores in descending order with 'pts'", () => {
     const scores = [
       ["Bogdan", 10],
       ["Maria", 8],
@@ -14,17 +14,17 @@ describe("Leaderboard component", () => {
     render(<Leaderboard scores={scores} />);
     const items = screen.getAllByRole("listitem");
     
-    // Verificăm conținutul text simplificat: "1. Bogdan: 10p", "2. Maria: 8p", "3. Ana: 5p"
-    expect(items[0]).toHaveTextContent("1. Bogdan: 10p");
-    expect(items[1]).toHaveTextContent("2. Maria: 8p");
-    expect(items[2]).toHaveTextContent("3. Ana: 5p");
+    // Check that the text is exactly "1. Bogdan: 10 pts", "2. Maria: 8 pts", "3. Ana: 5 pts"
+    expect(items[0]).toHaveTextContent("1. Bogdan: 10 pts");
+    expect(items[1]).toHaveTextContent("2. Maria: 8 pts");
+    expect(items[2]).toHaveTextContent("3. Ana: 5 pts");
   });
 
-  test("afișează corect un singur scor", () => {
+  test("displays a single score correctly", () => {
     const scores = [["TestUser", 99]];
     render(<Leaderboard scores={scores} />);
     
-    // Verificăm că există un <li> care conține "1. TestUser: 99p"
-    expect(screen.getByText("1. TestUser: 99p")).toBeInTheDocument();
+    // Verify that there is an <li> containing "1. TestUser: 99 pts"
+    expect(screen.getByText("1. TestUser: 99 pts")).toBeInTheDocument();
   });
 });
