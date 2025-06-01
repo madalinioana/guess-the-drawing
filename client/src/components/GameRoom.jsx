@@ -18,7 +18,8 @@ export default function GameRoom(props) {
     onStartGame,
     onSendMessage,
     username,
-    scores
+    scores,
+    onLeaveRoom
   } = props;
 
   const isDrawer = game.drawer === username;
@@ -59,6 +60,7 @@ export default function GameRoom(props) {
         users={users}
         game={game}
         onStartGame={onStartGame}
+        onLeaveRoom={onLeaveRoom}
       />
 
       <DrawingBoard
