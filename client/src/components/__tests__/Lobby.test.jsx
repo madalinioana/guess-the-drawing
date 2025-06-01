@@ -3,79 +3,52 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import Lobby from "../Lobby";
 
 describe("Lobby component", () => {
-  test("displays inputs and buttons", () => {
-    render(
-      <Lobby
-        username=""
-        setUsername={() => {}}
-        inputRoomId=""
-        setInputRoomId={() => {}}
-        onCreateRoom={() => {}}
-        onJoinRoom={() => {}}
-      />
-    );
+  let mockSetUsername, mockSetInputRoomId, mockCreate, mockJoin;
 
-    expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
-    expect(screen.getByText("Create Room")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Room ID")).toBeInTheDocument();
-    expect(screen.getByText("Join")).toBeInTheDocument();
-  });
-
-  test("calls setUsername when typing in input", () => {
-    const mockSetUsername = jest.fn();
+  beforeEach(() => {
+    mockSetUsername = jest.fn();
+    mockSetInputRoomId = jest.fn();
+    mockCreate = jest.fn();
+    mockJoin = jest.fn();
 
     render(
       <Lobby
         username=""
         setUsername={mockSetUsername}
         inputRoomId=""
-        setInputRoomId={() => {}}
-        onCreateRoom={() => {}}
-        onJoinRoom={() => {}}
-      />
-    );
-
-    const input = screen.getByPlaceholderText("Username");
-    fireEvent.change(input, { target: { value: "Bogdan" } });
-
-    expect(mockSetUsername).toHaveBeenCalledWith("Bogdan");
-  });
-
-  test("calls onCreateRoom when clicking button", () => {
-    const mockCreate = jest.fn();
-
-    render(
-      <Lobby
-        username="Test"
-        setUsername={() => {}}
-        inputRoomId=""
-        setInputRoomId={() => {}}
+        setInputRoomId={mockSetInputRoomId}
         onCreateRoom={mockCreate}
-        onJoinRoom={() => {}}
-      />
-    );
-
-    const btn = screen.getByText("Create Room");
-    fireEvent.click(btn);
-
-    expect(mockCreate).toHaveBeenCalled();
-  });
-
-  test("calls onJoinRoom when clicking button", () => {
-    const mockJoin = jest.fn();
-
-    render(
-      <Lobby
-        username="Test"
-        setUsername={() => {}}
-        inputRoomId="9999"
-        setInputRoomId={() => {}}
-        onCreateRoom={() => {}}
         onJoinRoom={mockJoin}
       />
     );
+  });
 
-    fireEvent.click(screen.getByText("Join"));
+  test("afișează inputurile și butoanele", () => {
+    // Placeholder‐urile reale din componentă sunt "Username" și "Room ID"
+    expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
+    expect(screen.getByText("Create room")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Room ID")).toBeInTheDocument();
+    expect(screen.getByText("Join")).toBeInTheDocument();
+  });
+
+  test("apelează setUsername la scriere în input", () => {
+    const input = screen.getByPlaceholderText("Username");
+    fireEvent.change(input, { target: { value: "Bogdan" } });
+    expect(mockSetUsername).toHaveBeenCalledWith("Bogdan");
+  });
+
+  test("apelează onCreateRoom la click pe butonul Create room", () => {
+    // Mergem pe butonul cu textul exact din componentă
+    const btnCreate = screen.getByText("Create room");
+    fireEvent.click(btnCreate);
+    expect(mockCreate).toHaveBeenCalled();
+  });
+
+  test("apelează onJoinRoom la click pe butonul Join", () => {
+    const inputRoom = screen.getByPlaceholderText("Room ID");
+    fireEvent.change(inputRoom, { target: { value: "9999" } });
+    const btnJoin = screen.getByText("Join");
+    fireEvent.click(btnJoin);
     expect(mockJoin).toHaveBeenCalled();
   });
 });
