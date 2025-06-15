@@ -408,7 +408,7 @@ Learned that Vercel doesn't support persistent WebSockets. Deployed backend sepa
 #### 6. UI/UX Suggestions
 **Prompt:** Fun UI/UX ideas for a drawing-guessing game  
 **Outcome:**  
-Implemented ideas like:
+Got ideas like:
 - Brush customization
 - Canvas glow on correct guess
 - Animated guess feedback
