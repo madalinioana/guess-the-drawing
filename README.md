@@ -72,66 +72,9 @@ npm test
    ```bash
    npm run dev
    ```
-5. Open your browser at http://localhost:5173
+5. Open your browser at http://localhost:5173 
 
-## 2. Backlog Creation
-
-1. **Enter App:**  
-   - [x] Choose nickname  
-   - [x] Validate nickname uniqueness  
-   - [ ] Persist nickname between sessions  
-
-2. **Room Management:**  
-   - [x] Create new room with unique code  
-   - [x] Join room by code  
-   - [ ] Show room list/lobby  
-   - [ ] Invite friends via shareable link  
-
-3. **Word Assignment:**  
-   - [x] Maintain word bank on server  
-   - [x] Assign random word to drawer each round  
-   - [ ] Allow custom word lists  
-
-4. **Real-Time Drawing Broadcast:**  
-   - [x] Set up Socket.io connection  
-   - [x] Emit drawing events (stroke start/end, coordinates)  
-   - [x] Broadcast strokes to all clients in room  
-   - [ ] Optimize for high-latency environments  
-
-5. **Chat & Guessing:**  
-   - [x] Open text-input chat component  
-   - [x] Compare guesses to target word  
-   - [x] Broadcast “correct guess” event  
-   - [ ] Prevent repeated guesses of the same word  
-
-6. **Scoring & Ranking:**  
-   - [x] Maintain per-player score on server  
-   - [x] Emit score updates after each correct guess  
-   - [ ] Display historical round winners  
-   - [ ] Persist overall statistics (games played, win rate)  
-
-7. **Drawing Tools (Frontend):**  
-   - [x] Brush size selection  
-   - [x] Color palette  
-   - [x] Eraser tool  
-   - [ ] Undo/redo functionality  
-
-8. **Live Canvas Rendering (Frontend):**  
-   - [x] Render strokes in real time as they arrive  
-   - [x] Clear canvas at round start/end  
-   - [ ] Show a “preview” layer for pending strokes  
-
-9. **Responsive Design (Frontend):**  
-   - [x] Use flexible CSS grid for layout  
-   - [x] Test on mobile and desktop viewports  
-   - [ ] Refine touch controls on mobile  
-
-10. **Clean Interface (Frontend):**  
-    - [x] Display current drawer and timer  
-    - [x] Show player list with avatars and scores  
-    - [ ] Add animations for turn transitions  
-
-## 3. UML Diagram
+## UML Diagram
 
 ![UML_diagram](images/umDiagrama.png)
 
@@ -264,7 +207,7 @@ Below is a concise, plain-language overview of the UML diagram shown above:
       - **DrawingData** on the client matches exactly what the server expects for real-time stroke broadcasting.
 
 
-## 6. Unit Test Automation
+## Unit Test Automation
 
 **Status:** In progress  
 
