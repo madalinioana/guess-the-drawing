@@ -1,6 +1,6 @@
-# 🎮 Guess the Drawing
+# [Guess the Drawing](https://guess-the-drawing-tau.vercel.app/)
 
-A real-time multiplayer drawing game inspired by [Skribbl.io](https://skribbl.io). One player draws a hidden word while the others try to guess it through chat before time runs out.
+A real-time multiplayer drawing game inspired where one player draws a hidden word while the others try to guess it through chat before time runs out.
 
 ## 🛠️ Technologies Used
 
