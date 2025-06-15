@@ -4,7 +4,7 @@ A real-time multiplayer drawing game where one player draws a hidden word while 
 
 > [Play the game](https://guess-the-drawing-tau.vercel.app/)
 
-> [Video demo]([https://guess-the-drawing-tau.vercel.app/](https://youtu.be/7kIcNPx2oTA))
+> [Video demo](https://youtu.be/7kIcNPx2oTA)
 
 ## 🛠️ Technologies Used
 
