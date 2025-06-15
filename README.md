@@ -1,7 +1,9 @@
 # Guess the Drawing
 
 A real-time multiplayer drawing game where one player draws a hidden word while the others try to guess it through chat before time runs out.
+
 > [Play the game](https://guess-the-drawing-tau.vercel.app/)
+
 > [Video demo]([https://guess-the-drawing-tau.vercel.app/](https://youtu.be/7kIcNPx2oTA))
 
 ## 🛠️ Technologies Used
