@@ -4,6 +4,7 @@ import Header from "../Header";
 
 describe("Header component", () => {
   test("displays the room ID", () => {
+    // render header with a sample room ID
     render(
       <Header
         roomId="1234"
@@ -13,10 +14,12 @@ describe("Header component", () => {
         onStartGame={() => {}}
       />
     );
+    // check that room ID is shown
     expect(screen.getByText(/Room: 1234/)).toBeInTheDocument();
   });
 
   test("displays player names", () => {
+    // provide users and check if names are displayed
     const users = [{ id: "1", name: "Ana" }, { id: "2", name: "George" }];
     render(
       <Header
@@ -31,6 +34,7 @@ describe("Header component", () => {
   });
 
   test("shows 'Creator' badge if user is creator", () => {
+    // render with isCreator = true
     render(
       <Header
         roomId="9999"
@@ -40,10 +44,12 @@ describe("Header component", () => {
         onStartGame={() => {}}
       />
     );
+    // check for 'Creator' label
     expect(screen.getByText(/Creator/)).toBeInTheDocument();
   });
 
   test("shows 'Start Game' button only in waiting phase and if user is creator", () => {
+    // should show button because user is creator and phase is waiting
     render(
       <Header
         roomId="7777"
@@ -57,6 +63,7 @@ describe("Header component", () => {
   });
 
   test("does not show 'Start Game' button if user is not creator", () => {
+    // should not show button because user is not creator
     render(
       <Header
         roomId="7777"

@@ -24,7 +24,6 @@ describe("Lobby component", () => {
   });
 
   test("renders both input fields and buttons", () => {
-    // The component uses placeholders "Username" and "Room ID", and buttons "Create Room" and "Join"
     expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
     expect(screen.getByText("Create Room")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Room ID")).toBeInTheDocument();

@@ -8,6 +8,7 @@ import "./ToastOverrides.css";
 import "./App.css";
 
 function App() {
+  // state for username, room, messages, scores, etc.
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
   const [inputRoomId, setInputRoomId] = useState("");
@@ -25,17 +26,19 @@ function App() {
 
   const socketIdRef = useRef("");
 
-   useEffect(() => {
+  useEffect(() => {
+    // check for invite room in URL params
     const params = new URLSearchParams(window.location.search);
     const inviteRoom = params.get("room");
     if (inviteRoom) {
       setInputRoomId(inviteRoom);
 
-      // (Optional) Clean up the URL so the query param disappears:
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
+
   const handleLeaveRoom = () => {
+    // leave the room and reset state
     socket.emit("leave-room");
     setRoomId("");
     setIsCreator(false);
@@ -57,12 +60,12 @@ function App() {
   };
 
   useEffect(() => {
-      
+    // setup socket listeners
     socketIdRef.current = socket.id;
 
     socket.on("connect", () => {
       socketIdRef.current = socket.id;
-      console.log("Socket conectat:", socket.id);
+      console.log("Socket connected:", socket.id);
     });
 
     const handleRoomCreated = (newRoomId) => {
@@ -184,6 +187,7 @@ function App() {
     );
 
     return () => {
+      // cleanup listeners on component unmount
       socket.off("roomCreated", handleRoomCreated);
       socket.off("roomJoined", handleRoomJoined);
       socket.off("updateUsers", handleUpdateUsers);

@@ -308,7 +308,6 @@ function endRound(roomId, drawerScore = 10) {
     word: state.currentWord,
   });
 
-  // Curățăm starea rundei
   gameState.delete(roomId);
 }
 

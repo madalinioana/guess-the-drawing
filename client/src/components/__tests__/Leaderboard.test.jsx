@@ -1,5 +1,3 @@
-// src/components/__tests__/Leaderboard.test.jsx
-
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import Leaderboard from "../Leaderboard";

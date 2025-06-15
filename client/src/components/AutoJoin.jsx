@@ -1,4 +1,3 @@
-// src/components/AutoJoin.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import socket from "../socket"; // your configured socket.io client
@@ -23,8 +22,6 @@ export default function AutoJoin() {
 
     // Listen for success or error feedback
     socket.once("roomJoined", ({ roomId: joinedRoomId, users }) => {
-      // Navigate to the GameRoom path. 
-      // If your App.jsx expects path="/room/:roomId", then:
       navigate(`/room/${joinedRoomId}`);
     });
 
