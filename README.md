@@ -74,39 +74,6 @@ npm test
    ```
 5. Open your browser at http://localhost:5173
 
-   ## 1. User Stories
-
-### Backend
-1. **Enter App:**  
-   As a user, I want to choose a unique nickname to join the game so that I can participate in drawing and guessing.
-
-2. **Room Management:**  
-   As a user, I want to create a new room or join an existing one (by room code) so that I can play with friends or random opponents.
-
-3. **Word Assignment:**  
-   As a user, I want the server to assign a random word to the current drawer each round so that the game proceeds automatically.
-
-4. **Real-Time Drawing Broadcast:**  
-   As a user, I want my drawing strokes to be sent to the server and broadcast to all connected clients in the room so that everyone sees the same sketch in real time.
-
-5. **Chat & Guessing:**  
-   As a user, I want to send chat messages or guess attempts; the server should check guesses against the assigned word and award points when correct.
-
-6. **Scoring & Ranking:**  
-   As a user, I want the server to track all players’ points and update the room leaderboard so that I can see who’s winning each round.
-
-### Frontend
-7. **Drawing Tools:**  
-   As a user, I want an intuitive set of drawing tools (brush size, colors, eraser) so that I can sketch clearly.
-
-8. **Live Canvas Rendering:**  
-   As a user, I want the canvas to update immediately as others draw so that I can guess in real time without delay.
-
-9. **Responsive Design:**  
-   As a user, I want the app to adapt to different screen sizes so that I can play on desktop or mobile seamlessly.
-
-10. **Clean Interface:**  
-    As a user, I want a minimal, intuitive UI with clear indicators (whose turn it is, timer countdown, current score) so that I can focus on drawing and guessing.
 ## 2. Backlog Creation
 
 1. **Enter App:**  
