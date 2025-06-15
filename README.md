@@ -357,8 +357,6 @@ Frontend/
 
 During the development of this project, we used AI (ChatGPT) to assist with architecture decisions, game mechanics, and code implementation. Below is a summary of how prompt-based guidance improved our workflow and helped shape the game logic.
 
-> 🔗 Full AI conversation log: [View the ChatGPT discussion here](#INSERT_CHATGPT_SHARE_LINK_HERE)
-
 ---
 
 ### ✅ Topics and Prompt Outcomes
