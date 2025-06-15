@@ -353,5 +353,74 @@ Frontend/
 └─ angular.json
 ```
 
+## 🤖 AI-assisted Development (Prompt Engineering)
+
+During the development of this project, we used AI (ChatGPT) to assist with architecture decisions, game mechanics, and code implementation. Below is a summary of how prompt-based guidance improved our workflow and helped shape the game logic.
+
+---
+
+### ✅ Topics and Prompt Outcomes
+
+#### 1. Game Architecture Design
+**Prompt:** How to build a browser-based multiplayer drawing and guessing game like Skribbl.io  
+**Outcome:**  
+We received a scalable full-stack architecture suggestion using:
+- **Frontend**: HTML/CSS/JS + Canvas API
+- **Backend**: Node.js + Express
+- **Real-time layer**: Socket.IO for WebSocket communication
+- Modular design with clear role separation and support for multiple game rooms.
+
+---
+
+#### 2. Turn-Based Game Logic
+**Prompt:** How to rotate turns and automatically switch to the next player after a timer or correct guess  
+**Outcome:**  
+Implemented a `currentTurnIndex`, with round tracking and `setTimeout` for turn duration. Turn ends early if someone guesses the word correctly. Logic includes disconnect handling and smooth player transitions.
+
+---
+
+#### 3. Real-Time Drawing Synchronization
+**Prompt:** How to broadcast Canvas drawing events via Socket.IO  
+**Outcome:**  
+Implemented real-time drawing by emitting `mousemove` events and broadcasting them to other players. Suggestions included throttling mouse events, sending batched points, and drawing optimization for smoother rendering.
+
+---
+
+#### 4. Edge Case Handling
+**Prompt:** What edge cases should be tested in a real-time multiplayer drawing game  
+**Outcome:**  
+Got a comprehensive list of failure scenarios like:
+- Drawer disconnects mid-turn
+- Players joining mid-game
+- Multiple correct guesses
+- Abusing guessing system
+Provided actionable strategies for each.
+
+---
+
+#### 5. WebSocket Deployment
+**Prompt:** How to deploy a Node.js + Socket.IO game on Vercel  
+**Outcome:**  
+Learned that Vercel doesn't support persistent WebSockets. Deployed backend separately to **Render** or **Fly.io**, and connected frontend from Vercel using CORS.
+
+---
+
+#### 6. UI/UX Suggestions
+**Prompt:** Fun UI/UX ideas for a drawing-guessing game  
+**Outcome:**  
+Got ideas like:
+- Brush customization
+- Canvas glow on correct guess
+- Animated guess feedback
+- Circular timer for drawer
+- Emoji reactions and score bubbles
+
+---
+
+### ✅ Summary
+
+By leveraging prompt engineering, we accelerated the development of core features, avoided common pitfalls, and built a more polished multiplayer game. Using ChatGPT helped us validate design decisions and focus on user experience without reinventing the wheel.
+
+> 📄 Full prompt-response history available at: [ChatGPT conversation link](https://chatgpt.com/share/684f0a50-3e9c-8007-b4a5-e20547ab7b5d)
 
 
