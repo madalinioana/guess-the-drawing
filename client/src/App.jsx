@@ -19,6 +19,8 @@ function App() {
     phase: "waiting",
     timeLeft: 0,
     currentWord: "",
+    wordHint: "",
+    wordLength: 0,
     drawer: "",
     lastWinner: ""
   });
@@ -89,7 +91,9 @@ function App() {
       setGame((prev) => ({
         ...prev,
         phase: data.phase,
-        currentWord: data.word || "",
+        currentWord: data.word || prev.currentWord || "",
+        wordHint: data.wordHint || "",
+        wordLength: data.wordLength || 0,
         drawer: data.drawer || "",
         timeLeft: data.time != null ? data.time : prev.timeLeft
       }));
@@ -122,6 +126,8 @@ function App() {
         ...prev,
         phase: "waiting",
         currentWord: "",
+        wordHint: "",
+        wordLength: 0,
         drawer: "",
         timeLeft: 0,
         lastWinner: `${drawer} drew "${word}"`
@@ -180,6 +186,11 @@ function App() {
     socket.on("kicked", handlePlayerKicked);
     socket.on("creator-changed", handleCreatorChanged);
     socket.on("players-update", handleUpdateUsers);
+    socket.on("rateLimited", (msg) =>
+      toast.warning(
+        <div className="custom-toast-warning">{msg || "Slow down! Too many messages."}</div>
+      )
+    );
     socket.on("error", (msg) =>
       toast.error(
         <div className="custom-toast-error">{msg}</div>
@@ -200,6 +211,7 @@ function App() {
       socket.off("kicked", handlePlayerKicked);
       socket.off("creator-changed", handleCreatorChanged);
       socket.off("players-update", handleUpdateUsers);
+      socket.off("rateLimited");
       socket.off("error");
     };
   }, []);

@@ -67,6 +67,7 @@ export default function GameRoom(props) {
         socket={socket}
         isDrawer={isDrawer}
         currentWord={game.currentWord}
+        wordHint={game.wordHint}
         phase={game.phase}
       />
 

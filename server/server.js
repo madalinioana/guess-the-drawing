@@ -1,15 +1,34 @@
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
+const crypto = require("crypto");
 const { Server } = require("socket.io");
+
+// Security utilities
+const { sanitizeInput, sanitizeUsername } = require("./utils/sanitize");
+const { isAllowed } = require("./middleware/rateLimiter");
 
 const app = express();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
+// Allowed origins for CORS and WebSocket
+const allowedOrigins = [
+  FRONTEND_URL,
+  "https://guess-the-drawing-tau.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
+
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -18,23 +37,51 @@ app.use(
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
+
+// Connection tracking for rate limiting
+const connections = new Map();
+const MAX_CONNECTIONS_PER_IP = 5;
 
 const scores = new Map();
 const gameState = new Map();
 const rooms = new Map();
 const creators = new Map();
 
+// Cryptographically secure Room ID generation
 function generateRoomId() {
   let roomId;
   do {
-    roomId = Math.floor(1000 + Math.random() * 9000).toString();
+    roomId = crypto.randomBytes(4).toString("hex").toUpperCase();
   } while (rooms.has(roomId));
   return roomId;
+}
+
+// Validate drawing data structure and ranges
+function validateDrawingData(data) {
+  if (!data || typeof data !== "object") return false;
+  
+  // Validate coordinates if present
+  if (data.x !== undefined && (typeof data.x !== "number" || data.x < 0 || data.x > 2000)) return false;
+  if (data.y !== undefined && (typeof data.y !== "number" || data.y < 0 || data.y > 2000)) return false;
+  
+  // Validate line width
+  if (data.lineWidth !== undefined && (typeof data.lineWidth !== "number" || data.lineWidth < 1 || data.lineWidth > 50)) return false;
+  
+  // Validate color (should be a valid hex or color string)
+  if (data.color !== undefined && typeof data.color !== "string") return false;
+  
+  return true;
 }
 
 function getUsers(roomId) {
@@ -47,6 +94,41 @@ function getUsers(roomId) {
     .filter(Boolean);
 }
 
+// WebSocket middleware: Connection limit per IP
+io.use((socket, next) => {
+  const ip = socket.handshake.address;
+  const count = connections.get(ip) || 0;
+  
+  if (count >= MAX_CONNECTIONS_PER_IP) {
+    return next(new Error("Too many connections from this IP"));
+  }
+  
+  connections.set(ip, count + 1);
+  
+  // Cleanup on disconnect
+  socket.on("disconnect", () => {
+    const currentCount = connections.get(ip) || 1;
+    if (currentCount <= 1) {
+      connections.delete(ip);
+    } else {
+      connections.set(ip, currentCount - 1);
+    }
+  });
+  
+  next();
+});
+
+// WebSocket middleware: Origin validation
+io.use((socket, next) => {
+  const origin = socket.handshake.headers.origin;
+  
+  if (origin && !allowedOrigins.includes(origin)) {
+    return next(new Error("Invalid origin"));
+  }
+  
+  next();
+});
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
@@ -58,14 +140,27 @@ io.on("connection", (socket) => {
   }
 
   socket.on("createRoom", (username) => {
+    // Rate limiting
+    if (!isAllowed(socket.id, "createRoom")) {
+      socket.emit("error", "Too many rooms created. Please wait.");
+      return;
+    }
+    
+    // Sanitize username
+    const cleanUsername = sanitizeUsername(username);
+    if (!cleanUsername) {
+      socket.emit("error", "Invalid username");
+      return;
+    }
+    
     const roomId = generateRoomId();
     rooms.set(roomId, new Set([socket.id]));
     socket.join(roomId);
     socket.roomId = roomId;
-    socket.username = username;
+    socket.username = cleanUsername;
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
-    scores.get(roomId).set(username, 0);
+    scores.get(roomId).set(cleanUsername, 0);
     creators.set(roomId, socket.id);
 
     socket.emit("roomCreated", roomId);
@@ -73,18 +168,31 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joinRoom", ({ roomId, username }) => {
+    // Rate limiting
+    if (!isAllowed(socket.id, "joinRoom")) {
+      socket.emit("error", "Too many join attempts. Please wait.");
+      return;
+    }
+    
     if (!rooms.has(roomId)) {
       socket.emit("error", "Room does not exist!");
+      return;
+    }
+
+    // Sanitize username
+    const cleanUsername = sanitizeUsername(username);
+    if (!cleanUsername) {
+      socket.emit("error", "Invalid username");
       return;
     }
 
     rooms.get(roomId).add(socket.id);
     socket.join(roomId);
     socket.roomId = roomId;
-    socket.username = username;
+    socket.username = cleanUsername;
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
-    scores.get(roomId).set(username, 0);
+    scores.get(roomId).set(cleanUsername, 0);
 
     io.to(roomId).emit("players-update", getUsers(roomId));
     io.to(roomId).emit("updateUsers", getUsers(roomId));
@@ -121,15 +229,30 @@ io.on("connection", (socket) => {
     const state = gameState.get(roomId);
     if (!state || state.drawerId !== socket.id || state.phase !== "select-word") return;
 
-    state.currentWord = word.toLowerCase();
+    // Sanitize word
+    const cleanWord = sanitizeInput(word);
+    if (!cleanWord) return;
+
+    state.currentWord = cleanWord.toLowerCase();
     state.drawingTime = 60;
     state.phase = "drawing";
 
-    socket.emit("setPhase", { phase: "drawing", word: word, time: state.drawingTime });
-    io.to(roomId).emit("setPhase", {
+    // Send word to drawer
+    socket.emit("setPhase", { 
+      phase: "drawing", 
+      word: cleanWord, 
+      time: state.drawingTime,
+      drawer: socket.username
+    });
+    
+    // Send word hint (underscores for length) to guessers
+    const wordHint = cleanWord.replace(/[a-zA-Z0-9]/g, "_");
+    socket.to(roomId).emit("setPhase", {
       phase: "drawing",
       drawer: socket.username,
       time: state.drawingTime,
+      wordHint: wordHint,
+      wordLength: cleanWord.length
     });
 
     state.timer = setInterval(() => {
@@ -147,16 +270,26 @@ io.on("connection", (socket) => {
     const state = gameState.get(roomId);
     if (!roomId) return;
 
+    // Rate limiting
+    if (!isAllowed(socket.id, "message")) {
+      socket.emit("rateLimited", "Too many messages. Please slow down.");
+      return;
+    }
+
+    // Sanitize message
+    const cleanMessage = sanitizeInput(message);
+    if (!cleanMessage) return;
+
     io.to(roomId).emit("message", {
       username: socket.username,
-      message,
+      message: cleanMessage,
     });
 
     if (
       state &&
       state.phase === "drawing" &&
       socket.id !== state.drawerId &&
-      message.trim().toLowerCase() === state.currentWord
+      cleanMessage.trim().toLowerCase() === state.currentWord
     ) {
       const guesserName = socket.username;
       const drawerSocket = io.sockets.sockets.get(state.drawerId);
@@ -194,19 +327,52 @@ io.on("connection", (socket) => {
 
   socket.on("send-drawing", (data) => {
     const roomId = socket.roomId;
-    if (roomId) socket.broadcast.to(roomId).emit("receive-drawing", data);
+    if (!roomId) return;
+    
+    // Rate limiting for drawing events
+    if (!isAllowed(socket.id, "drawing")) {
+      return; // Silently ignore excessive drawing events
+    }
+    
+    // Validate drawing data
+    if (!validateDrawingData(data)) {
+      return; // Invalid data structure
+    }
+    
+    // Verify sender is the drawer (anti-cheat)
+    const state = gameState.get(roomId);
+    if (state && state.phase === "drawing" && socket.id !== state.drawerId) {
+      return; // Not the drawer, ignore
+    }
+    
+    socket.broadcast.to(roomId).emit("receive-drawing", data);
   });
 
   socket.on("clear-board", () => {
     const roomId = socket.roomId;
-    if (roomId) socket.broadcast.to(roomId).emit("clear-board");
+    if (!roomId) return;
+    
+    // Verify sender is the drawer
+    const state = gameState.get(roomId);
+    if (state && state.phase === "drawing" && socket.id !== state.drawerId) {
+      return; // Not the drawer, ignore
+    }
+    
+    socket.broadcast.to(roomId).emit("clear-board");
   });
 
   socket.on("kick-player", ({ targetId, roomId }) => {
     const room = rooms.get(roomId);
+    
+    // Host validation - only the room creator can kick players
+    if (!room || creators.get(roomId) !== socket.id) {
+      socket.emit("error", { code: "UNAUTHORIZED", message: "Only the host can kick players" });
+      return;
+    }
+    
     const targetSocket = io.sockets.sockets.get(targetId);
 
-    if (room && room.has(targetId)) {
+    if (room.has(targetId)) {
       const username = targetSocket?.username;
 
       io.to(targetId).emit("kicked");
