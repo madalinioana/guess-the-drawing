@@ -3,6 +3,10 @@ const http = require("http");
 const cors = require("cors");
 const crypto = require("crypto");
 const { Server } = require("socket.io");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 // Security utilities
 const { sanitizeInput, sanitizeUsername } = require("./utils/sanitize");
@@ -11,6 +15,7 @@ const { isAllowed } = require("./middleware/rateLimiter");
 const app = express();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 // Allowed origins for CORS and WebSocket
 const allowedOrigins = [
@@ -89,7 +94,22 @@ function getUsers(roomId) {
   return Array.from(ids)
     .map((id) => {
       const s = io.sockets.sockets.get(id);
-      return s ? { id, name: s.username } : null;
+      if (!s) return null;
+      
+      // Include avatar if user is registered
+      let avatar = "👤"; // Default for guests
+      if (s.userId) {
+        const user = users.get(s.userId);
+        if (user && user.avatar) {
+          avatar = user.avatar;
+        }
+      }
+      
+      return { 
+        id, 
+        name: s.username,
+        avatar: avatar
+      };
     })
     .filter(Boolean);
 }

@@ -77,7 +77,7 @@ export default function GameRoom(props) {
         isDrawer={isDrawer}
       />
 
-      <Leaderboard scores={scores} />
+      <Leaderboard scores={scores} users={users} />
 
       {game.lastWinner && <WinnerDisplay winner={game.lastWinner} />}
 
@@ -88,6 +88,7 @@ export default function GameRoom(props) {
             .filter((user) => user.name !== username)
             .map((user) => (
               <div className="kick-row" key={user.id}>
+                <span className="kick-avatar">{user.avatar || '👤'}</span>
                 <span className="kick-name">{user.name}</span>
                 <button className="kick-button" onClick={() => handleKick(user.name)}>
                   Kick

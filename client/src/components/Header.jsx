@@ -16,7 +16,7 @@ export default function Header({ roomId, isCreator, users, game, onStartGame, on
         {isCreator && <span className="creator-badge">Creator</span>}
       </h3>
 
-      <p className="header-info">Players: {users.map(u => u.name).join(", ")}</p>
+      <p className="header-info">Players: {users.map(u => `${u.avatar || '👤'} ${u.name}`).join(", ")}</p>
       <p className="header-info">{phaseLabel} | Time: {game.timeLeft}s</p>
 
       <div className="header-buttons">
