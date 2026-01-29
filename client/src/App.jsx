@@ -5,6 +5,7 @@ import GameRoom from "./components/GameRoom";
 import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import ProfileModal from "./components/ProfileModal";
+import PublicLeaderboard from "./components/PublicLeaderboard";
 import { ToastContainer, toast } from "react-toastify";
 import { authService } from "./services/authService";
 import "react-toastify/dist/ReactToastify.css";
@@ -34,6 +35,9 @@ function App() {
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // View state for navigation
+  const [currentView, setCurrentView] = useState("lobby"); // "lobby" or "leaderboard"
 
   const socketIdRef = useRef("");
 
@@ -244,19 +248,21 @@ function App() {
 
   const handleCreateRoom = () => {
     if (username.trim()) {
-      socket.emit("createRoom", { 
-        username, 
-        userId: user?.id || null 
+      socket.emit("createRoom", {
+        username,
+        userId: user?.id || null,
+        avatar: user?.avatar || "👤"
       });
     }
   };
 
   const handleJoinRoom = () => {
     if (username.trim() && inputRoomId.trim()) {
-      socket.emit("joinRoom", { 
-        roomId: inputRoomId, 
+      socket.emit("joinRoom", {
+        roomId: inputRoomId,
         username,
-        userId: user?.id || null 
+        userId: user?.id || null,
+        avatar: user?.avatar || "👤"
       });
     }
   };
@@ -394,31 +400,11 @@ function App() {
     }
   };
 
-  return (
-    <>
-      {/* Auth buttons - fixed position at top right, only visible in lobby */}
-      {!roomId && (
-        <div className="auth-fixed-container">
-          <AuthButton 
-            user={user} 
-            onLoginClick={handleLoginClick} 
-            onLogout={handleLogout}
-            onProfileClick={handleProfileClick}
-          />
-        </div>
-      )}
-
-      {!roomId ? (
-        <Lobby
-          username={username}
-          setUsername={setUsername}
-          inputRoomId={inputRoomId}
-          setInputRoomId={setInputRoomId}
-          onCreateRoom={handleCreateRoom}
-          onJoinRoom={handleJoinRoom}
-          user={user}
-        />
-      ) : (
+  // Render based on current view
+  const renderContent = () => {
+    // If in a game room, always show the game
+    if (roomId) {
+      return (
         <GameRoom
           socket={socket}
           roomId={roomId}
@@ -432,7 +418,44 @@ function App() {
           username={username}
           scores={scores}
         />
+      );
+    }
+
+    // Otherwise, show based on currentView
+    switch (currentView) {
+      case "leaderboard":
+        return <PublicLeaderboard onBack={() => setCurrentView("lobby")} />;
+      default:
+        return (
+          <Lobby
+            username={username}
+            setUsername={setUsername}
+            inputRoomId={inputRoomId}
+            setInputRoomId={setInputRoomId}
+            onCreateRoom={handleCreateRoom}
+            onJoinRoom={handleJoinRoom}
+            onShowLeaderboard={() => setCurrentView("leaderboard")}
+            user={user}
+          />
+        );
+    }
+  };
+
+  return (
+    <>
+      {/* Auth buttons - fixed position at top right, only visible in lobby */}
+      {!roomId && currentView === "lobby" && (
+        <div className="auth-fixed-container">
+          <AuthButton
+            user={user}
+            onLoginClick={handleLoginClick}
+            onLogout={handleLogout}
+            onProfileClick={handleProfileClick}
+          />
+        </div>
       )}
+
+      {renderContent()}
 
       <AuthModal
         isOpen={showAuthModal}
