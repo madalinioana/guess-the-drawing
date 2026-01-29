@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -8,11 +10,24 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 
+// Database connection
+const connectDB = require("./config/db");
+
+// Models
+const User = require("./models/User");
+
+// Routes
+const authRoutes = require("./routes/auth");
+const leaderboardRoutes = require("./routes/leaderboard");
+
 // Security utilities
 const { sanitizeInput, sanitizeUsername } = require("./utils/sanitize");
 const { isAllowed } = require("./middleware/rateLimiter");
 
 const app = express();
+
+// Connect to MongoDB
+connectDB();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -34,10 +49,17 @@ app.use(
         callback(new Error("CORS not allowed"));
       }
     },
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH"],
     credentials: true,
   })
 );
+
+// JSON body parser
+app.use(express.json());
+
+// API Routes
+app.use("/auth", authRoutes);
+app.use("/leaderboard", leaderboardRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -95,23 +117,28 @@ function getUsers(roomId) {
     .map((id) => {
       const s = io.sockets.sockets.get(id);
       if (!s) return null;
-      
-      // Include avatar if user is registered
-      let avatar = "👤"; // Default for guests
-      if (s.userId) {
-        const user = users.get(s.userId);
-        if (user && user.avatar) {
-          avatar = user.avatar;
-        }
-      }
-      
-      return { 
-        id, 
+
+      return {
+        id,
         name: s.username,
-        avatar: avatar
+        avatar: s.avatar || "👤",
+        userId: s.userId || null
       };
     })
     .filter(Boolean);
+}
+
+// Helper function to update user stats in MongoDB
+async function updateUserStats(userId, statsUpdate) {
+  if (!userId) return;
+
+  try {
+    await User.findByIdAndUpdate(userId, {
+      $inc: statsUpdate
+    });
+  } catch (error) {
+    console.error("Failed to update user stats:", error);
+  }
 }
 
 // WebSocket middleware: Connection limit per IP
@@ -159,25 +186,32 @@ io.on("connection", (socket) => {
     }
   }
 
-  socket.on("createRoom", (username) => {
+  socket.on("createRoom", (data) => {
     // Rate limiting
     if (!isAllowed(socket.id, "createRoom")) {
       socket.emit("error", "Too many rooms created. Please wait.");
       return;
     }
-    
+
+    // Handle both old format (string) and new format (object)
+    const username = typeof data === "string" ? data : data?.username;
+    const userId = typeof data === "object" ? data?.userId : null;
+    const avatar = typeof data === "object" ? data?.avatar : "👤";
+
     // Sanitize username
     const cleanUsername = sanitizeUsername(username);
     if (!cleanUsername) {
       socket.emit("error", "Invalid username");
       return;
     }
-    
+
     const roomId = generateRoomId();
     rooms.set(roomId, new Set([socket.id]));
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = cleanUsername;
+    socket.userId = userId;
+    socket.avatar = avatar || "👤";
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(cleanUsername, 0);
@@ -187,13 +221,13 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("updateUsers", getUsers(roomId));
   });
 
-  socket.on("joinRoom", ({ roomId, username }) => {
+  socket.on("joinRoom", ({ roomId, username, userId, avatar }) => {
     // Rate limiting
     if (!isAllowed(socket.id, "joinRoom")) {
       socket.emit("error", "Too many join attempts. Please wait.");
       return;
     }
-    
+
     if (!rooms.has(roomId)) {
       socket.emit("error", "Room does not exist!");
       return;
@@ -210,6 +244,8 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = cleanUsername;
+    socket.userId = userId || null;
+    socket.avatar = avatar || "👤";
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(cleanUsername, 0);
@@ -312,14 +348,13 @@ io.on("connection", (socket) => {
       cleanMessage.trim().toLowerCase() === state.currentWord
     ) {
       const guesserName = socket.username;
+      const guesserUserId = socket.userId;
       const drawerSocket = io.sockets.sockets.get(state.drawerId);
       const drawerName = drawerSocket?.username;
       const roomScores = scores.get(roomId);
 
-      if (!state.guessedPlayers) state.guessedPlayers = new Set();
+      if (!state.guessedPlayers) state.guessedPlayers = new Map();
       if (state.guessedPlayers.has(guesserName)) return;
-
-      state.guessedPlayers.add(guesserName);
 
       const maxTime = 60;
       const timeLeft = state.drawingTime;
@@ -327,9 +362,20 @@ io.on("connection", (socket) => {
       const guesserScore = Math.ceil(10 * (timeLeft / maxTime));
       const drawerScore = Math.ceil(10 * ((maxTime - timeLeft) / maxTime));
 
+      // Store guesser info with their score and userId
+      state.guessedPlayers.set(guesserName, { score: guesserScore, userId: guesserUserId });
+
       if (roomScores) {
         roomScores.set(guesserName, (roomScores.get(guesserName) || 0) + guesserScore);
         io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
+      }
+
+      // Update guesser stats in database
+      if (guesserUserId) {
+        updateUserStats(guesserUserId, {
+          "stats.correctGuesses": 1,
+          "stats.totalScore": guesserScore
+        });
       }
 
       io.to(roomId).emit("correctGuess", {
@@ -461,19 +507,18 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id);
   });
 });
-function endRound(roomId, drawerScore = 10) {
+async function endRound(roomId, drawerScore = 10) {
   const state = gameState.get(roomId);
   if (!state) return;
 
   const drawerSocket = io.sockets.sockets.get(state.drawerId);
   const drawerName = drawerSocket?.username;
+  const drawerUserId = drawerSocket?.userId;
   const roomScores = scores.get(roomId);
-
 
   const totalPlayers = getUsers(roomId).filter((u) => u.name !== drawerName).length;
 
   if (drawerName && roomScores) {
-  
     const guessedCount = state.guessedPlayers?.size || 0;
     const proportion = totalPlayers > 0
       ? 1 - (guessedCount / totalPlayers)
@@ -488,7 +533,28 @@ function endRound(roomId, drawerScore = 10) {
     );
 
     io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
+
+    // Update drawer stats in database
+    if (drawerUserId) {
+      await updateUserStats(drawerUserId, {
+        "stats.drawingsCompleted": 1,
+        "stats.totalScore": drawerPoints,
+        "stats.gamesPlayed": 1
+      });
+    }
+
+    // Update gamesPlayed for all guessers
+    if (state.guessedPlayers) {
+      for (const [, guesserData] of state.guessedPlayers) {
+        if (guesserData.userId) {
+          await updateUserStats(guesserData.userId, {
+            "stats.gamesPlayed": 1
+          });
+        }
+      }
+    }
   }
+
   io.to(roomId).emit("roundEnded", {
     drawer: drawerName,
     word: state.currentWord,

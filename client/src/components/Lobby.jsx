@@ -7,6 +7,7 @@ export default function Lobby({
   setInputRoomId,
   onCreateRoom,
   onJoinRoom,
+  onShowLeaderboard,
   user
 }) {
   return (
@@ -37,7 +38,13 @@ export default function Lobby({
       <button onClick={onJoinRoom} className="lobby-button blue">
         Join
       </button>
-      
+
+      <div className="lobby-divider"></div>
+
+      <button onClick={onShowLeaderboard} className="lobby-button yellow">
+        🏆 Leaderboard
+      </button>
+
       {!user && (
         <p className="lobby-guest-note">
           Playing as guest. Login to save your stats!

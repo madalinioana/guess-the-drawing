@@ -87,10 +87,26 @@ body {
   color: #fff;
 }
 
+.lobby-button.yellow {
+  background-color: #ffcc00;
+  color: #000;
+  font-weight: 700;
+}
+
+.lobby-button.yellow:hover {
+  background-color: #ffd633;
+}
+
 .lobby-or {
   font-size: 1.2rem;
   margin: 15px 0;
   color: #000;
+}
+
+.lobby-divider {
+  height: 3px;
+  background-color: #000;
+  margin: 20px 0;
 }
 
 .guessing-phase-container {
