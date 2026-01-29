@@ -42,6 +42,9 @@ build/Release
 node_modules/
 jspm_packages/
 
+# User data (contains passwords)
+server/users.json
+
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 

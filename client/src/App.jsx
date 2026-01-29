@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import socket from "./socket";
 import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
+import AuthModal from "./components/AuthModal";
+import AuthButton from "./components/AuthButton";
 import { ToastContainer, toast } from "react-toastify";
+import { authService } from "./services/authService";
 import "react-toastify/dist/ReactToastify.css";
 import "./ToastOverrides.css";
 import "./App.css";
@@ -23,8 +26,29 @@ function App() {
     lastWinner: ""
   });
   const [scores, setScores] = useState([]);
+  
+  // Authentication state
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const socketIdRef = useRef("");
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        // Pre-fill username if user is logged in
+        if (parsedUser.username) {
+          setUsername(parsedUser.username);
+        }
+      } catch (e) {
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // check for invite room in URL params
@@ -231,8 +255,99 @@ function App() {
     }
   };
 
+  // Authentication handlers
+  const handleLogin = async (credentials) => {
+    try {
+      const data = await authService.login(credentials.username, credentials.password);
+      const userData = {
+        id: data.userId,
+        username: data.username,
+        email: data.email,
+        token: data.token
+      };
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUsername(data.username);
+      setShowAuthModal(false);
+      toast.success(
+        <div className="custom-toast-success">
+          ✅ Welcome back, <strong>{data.username}</strong>!
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div className="custom-toast-error">
+          ❌ {error.message || "Login failed"}
+        </div>
+      );
+    }
+  };
+
+  const handleRegister = async (credentials) => {
+    try {
+      const data = await authService.register(
+        credentials.username,
+        credentials.email,
+        credentials.password
+      );
+      const userData = {
+        id: data.userId,
+        username: data.username,
+        email: data.email,
+        token: data.token
+      };
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUsername(data.username);
+      setShowAuthModal(false);
+      toast.success(
+        <div className="custom-toast-success">
+          🎉 Welcome, <strong>{data.username}</strong>! Account created successfully.
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div className="custom-toast-error">
+          ❌ {error.message || "Registration failed"}
+        </div>
+      );
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+    setUsername("");
+    
+    // If in a room, leave it
+    if (roomId) {
+      handleLeaveRoom();
+    }
+    
+    toast.info(
+      <div className="custom-toast-info">
+        👋 You have been logged out.
+      </div>
+    );
+  };
+
+  const handleLoginClick = () => {
+    setShowAuthModal(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setShowAuthModal(false);
+  };
+
   return (
     <>
+      {/* Auth buttons - fixed position at top right, only visible in lobby */}
+      {!roomId && (
+        <div className="auth-fixed-container">
+          <AuthButton user={user} onLoginClick={handleLoginClick} onLogout={handleLogout} />
+        </div>
+      )}
+
       {!roomId ? (
         <Lobby
           username={username}
@@ -241,6 +356,7 @@ function App() {
           setInputRoomId={setInputRoomId}
           onCreateRoom={handleCreateRoom}
           onJoinRoom={handleJoinRoom}
+          user={user}
         />
       ) : (
         <GameRoom
@@ -257,6 +373,13 @@ function App() {
           scores={scores}
         />
       )}
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={handleCloseAuthModal}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+      />
 
       <ToastContainer
         position="top-center"
