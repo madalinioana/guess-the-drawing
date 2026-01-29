@@ -28,6 +28,29 @@
 
 .leaderboard-item {
   font-size: 0.95rem;
-  padding: 4px 0;
+  padding: 6px 4px;
   border-bottom: 1px dashed #000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leaderboard-rank {
+  font-weight: 700;
+  min-width: 20px;
+}
+
+.leaderboard-avatar {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.leaderboard-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.leaderboard-score {
+  font-weight: 700;
+  color: #ff0033;
 }

@@ -4,6 +4,7 @@ import Lobby from "./components/Lobby";
 import GameRoom from "./components/GameRoom";
 import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
+import ProfileModal from "./components/ProfileModal";
 import { ToastContainer, toast } from "react-toastify";
 import { authService } from "./services/authService";
 import "react-toastify/dist/ReactToastify.css";
@@ -30,6 +31,7 @@ function App() {
   // Authentication state
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const socketIdRef = useRef("");
 
@@ -229,12 +231,22 @@ function App() {
   }, []);
 
   const handleCreateRoom = () => {
-    if (username.trim()) socket.emit("createRoom", username);
+    if (username.trim()) {
+      socket.emit("createRoom", { 
+        username, 
+        userId: user?.id || null 
+      });
+    }
   };
 
   const handleJoinRoom = () => {
-    if (username.trim() && inputRoomId.trim())
-      socket.emit("joinRoom", { roomId: inputRoomId, username });
+    if (username.trim() && inputRoomId.trim()) {
+      socket.emit("joinRoom", { 
+        roomId: inputRoomId, 
+        username,
+        userId: user?.id || null 
+      });
+    }
   };
 
   const handleStartGame = () => {
@@ -263,6 +275,7 @@ function App() {
         id: data.userId,
         username: data.username,
         email: data.email,
+        avatar: data.avatar || "😀",
         token: data.token
       };
       setUser(userData);
@@ -294,6 +307,7 @@ function App() {
         id: data.userId,
         username: data.username,
         email: data.email,
+        avatar: data.avatar || "😀",
         token: data.token
       };
       setUser(userData);
@@ -339,12 +353,46 @@ function App() {
     setShowAuthModal(false);
   };
 
+  const handleProfileClick = () => {
+    setShowProfileModal(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    setShowProfileModal(false);
+  };
+
+  const handleUpdateProfile = async (updates) => {
+    try {
+      const updatedUser = { ...user, ...updates };
+      await authService.updateProfile(user.id, updates);
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success(
+        <div className="custom-toast-success">
+          ✅ Profile updated successfully!
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div className="custom-toast-error">
+          ❌ {error.message || "Failed to update profile"}
+        </div>
+      );
+      throw error;
+    }
+  };
+
   return (
     <>
       {/* Auth buttons - fixed position at top right, only visible in lobby */}
       {!roomId && (
         <div className="auth-fixed-container">
-          <AuthButton user={user} onLoginClick={handleLoginClick} onLogout={handleLogout} />
+          <AuthButton 
+            user={user} 
+            onLoginClick={handleLoginClick} 
+            onLogout={handleLogout}
+            onProfileClick={handleProfileClick}
+          />
         </div>
       )}
 
@@ -379,6 +427,13 @@ function App() {
         onClose={handleCloseAuthModal}
         onLogin={handleLogin}
         onRegister={handleRegister}
+      />
+
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={handleCloseProfileModal}
+        user={user}
+        onUpdateProfile={handleUpdateProfile}
       />
 
       <ToastContainer

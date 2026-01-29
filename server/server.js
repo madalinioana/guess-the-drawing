@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   })
 );
@@ -25,7 +25,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   },
 });
@@ -114,6 +114,7 @@ app.post("/auth/register", async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      avatar: "😀", // Default avatar
       createdAt: new Date()
     };
 
@@ -128,6 +129,7 @@ app.post("/auth/register", async (req, res) => {
       userId,
       username,
       email,
+      avatar: newUser.avatar,
       token
     });
   } catch (error) {
@@ -167,6 +169,7 @@ app.post("/auth/login", async (req, res) => {
       userId: user.id,
       username: user.username,
       email: user.email,
+      avatar: user.avatar || "😀",
       token
     });
   } catch (error) {
@@ -201,6 +204,39 @@ app.post("/auth/verify", (req, res) => {
   }
 });
 
+app.patch("/auth/profile/:userId", (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const updates = req.body;
+
+    const user = users.get(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update allowed fields
+    if (updates.avatar !== undefined) {
+      user.avatar = updates.avatar;
+    }
+
+    users.set(userId, user);
+    saveUsers();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ message: "Server error during profile update" });
+  }
+});
+
 
 function generateRoomId() {
   let roomId;
@@ -215,7 +251,22 @@ function getUsers(roomId) {
   return Array.from(ids)
     .map((id) => {
       const s = io.sockets.sockets.get(id);
-      return s ? { id, name: s.username } : null;
+      if (!s) return null;
+      
+      // Include avatar if user is registered
+      let avatar = "👤"; // Default for guests
+      if (s.userId) {
+        const user = users.get(s.userId);
+        if (user && user.avatar) {
+          avatar = user.avatar;
+        }
+      }
+      
+      return { 
+        id, 
+        name: s.username,
+        avatar: avatar
+      };
     })
     .filter(Boolean);
 }
@@ -230,12 +281,16 @@ io.on("connection", (socket) => {
     }
   }
 
-  socket.on("createRoom", (username) => {
+  socket.on("createRoom", (data) => {
+    const username = typeof data === "string" ? data : data.username;
+    const userId = typeof data === "object" ? data.userId : null;
+    
     const roomId = generateRoomId();
     rooms.set(roomId, new Set([socket.id]));
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = username;
+    socket.userId = userId;
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(username, 0);
@@ -245,7 +300,7 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("updateUsers", getUsers(roomId));
   });
 
-  socket.on("joinRoom", ({ roomId, username }) => {
+  socket.on("joinRoom", ({ roomId, username, userId }) => {
     if (!rooms.has(roomId)) {
       socket.emit("error", "Room does not exist!");
       return;
@@ -255,6 +310,7 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = username;
+    socket.userId = userId || null;
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(username, 0);
