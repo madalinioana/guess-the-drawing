@@ -6,7 +6,7 @@ import './DrawingBoard.css';
 const COLORS = ['#000', '#f44336', '#4caf50', '#2196f3', '#ff9800', '#9c27b0'];
 const ERASER_COLOR = 'white';
 
-export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
+export default function DrawingBoard({ socket, isDrawer, currentWord, wordHint, phase }) {
   const [lines, setLines] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -120,7 +120,8 @@ export default function DrawingBoard({ socket, isDrawer, currentWord, phase }) {
       )}
       {!isDrawer && phase === 'drawing' && (
         <p className="bold-text draw-instruction">
-          Guess the word from the drawing! Type your answer in chat.
+          Guess the word: <span className="highlight-word word-hint">{wordHint || "_ _ _"}</span>
+          <span className="word-length">({wordHint ? wordHint.length : "?"} letters)</span>
         </p>
       )}
 
