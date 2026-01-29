@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram - Backend (Node.js)
+
+Container_Boundary(backend, "Backend Server") {
+    Component(server, "server.js", "Entry Point", "Initialize Express + Socket.IO")
+    Component(expressRoutes, "Express Routes", "HTTP Handlers", "GET /api/rooms, GET /health")
+    Component(socketHandler, "SocketHandler", "WebSocket Events", "Connection, drawing, guess, disconnect")
+    Component(roomManager, "RoomManager", "Service", "CRUD operations for rooms")
+    Component(gameLogic, "GameLogic", "Service", "Round management, scoring")
+    Component(playerManager, "PlayerManager", "Service", "Player tracking, score updates")
+}
+
+Rel(server, expressRoutes, "Registers")
+Rel(server, socketHandler, "Initializes")
+
+Rel(socketHandler, roomManager, "Calls: createRoom, getRoom")
+Rel(socketHandler, gameLogic, "Calls: startRound, endRound")
+Rel(socketHandler, playerManager, "Calls: addPlayer, removePlayer")
+
+Rel(gameLogic, playerManager, "Updates scores")
+Rel(roomManager, playerManager, "Manages players in rooms")
+
+@enduml

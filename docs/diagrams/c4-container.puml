@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Container Diagram - Guess the Drawing
+
+Person(player, "Jucator", "Utilizator")
+
+System_Boundary(frontend, "Frontend - Vercel") {
+    Container(reactApp, "React Application", "React 19, Vite", "Single Page Application cu componente UI")
+    Container(socketClient, "Socket.IO Client", "Socket.IO Client", "Gestionare conexiuni WebSocket")
+    Container(canvas, "React-Konva Canvas", "Konva.js", "Canvas pentru desenat")
+}
+
+System_Boundary(backend, "Backend - Railway") {
+    Container(expressServer, "Express Server", "Node.js, Express", "API REST si HTTP server")
+    Container(socketServer, "Socket.IO Server", "Socket.IO", "WebSocket server pentru real-time")
+    ContainerDb(gameEngine, "Game Engine", "In-Memory", "Logica joc, rooms, players, rounds")
+}
+
+Rel(player, reactApp, "Utilizeaza", "HTTPS")
+Rel(reactApp, socketClient, "Foloseste")
+Rel(reactApp, canvas, "Randeaza")
+
+Rel(socketClient, socketServer, "Conectare WebSocket", "WSS")
+Rel(reactApp, expressServer, "API calls", "HTTPS")
+
+Rel(socketServer, gameEngine, "Citeste/Scrie state")
+Rel(expressServer, gameEngine, "Citeste rooms")
+
+@enduml

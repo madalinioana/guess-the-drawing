@@ -1,0 +1,34 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram - Frontend (React)
+
+Container_Boundary(reactApp, "React Application") {
+    Component(app, "App.jsx", "React Component", "Root component, routing, socket initialization")
+    Component(lobby, "Lobby.jsx", "React Component", "Create/join rooms interface")
+    Component(room, "Room.jsx", "React Component", "Main game container")
+    Component(chat, "Chat.jsx", "React Component", "Message list + guess input")
+    Component(drawingCanvas, "DrawingCanvas.jsx", "React Component", "Konva canvas for drawing")
+    Component(leaderboard, "Leaderboard.jsx", "React Component", "Player scores display")
+    Component(timer, "Timer.jsx", "React Component", "Round countdown")
+    Component(socketService, "socketService.js", "Service", "Socket.IO abstraction layer")
+}
+
+Rel(app, lobby, "Routes to", "/lobby")
+Rel(app, room, "Routes to", "/room/:id")
+Rel(app, socketService, "Initializes")
+
+Rel(lobby, socketService, "Emit: createRoom, joinRoom")
+Rel(room, chat, "Contains")
+Rel(room, drawingCanvas, "Contains")
+Rel(room, leaderboard, "Contains")
+Rel(room, timer, "Contains")
+
+Rel(chat, socketService, "Emit: guess")
+Rel(drawingCanvas, socketService, "Emit: drawing")
+Rel(socketService, room, "Listen: gameStart, newRound")
+Rel(socketService, chat, "Listen: newMessage")
+Rel(socketService, leaderboard, "Listen: scoresUpdated")
+Rel(socketService, timer, "Listen: timerUpdate")
+
+@enduml

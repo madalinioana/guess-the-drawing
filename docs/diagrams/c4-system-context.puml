@@ -1,0 +1,19 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title System Context Diagram - Guess the Drawing
+
+Person(player, "Jucator", "Utilizator care acceseaza aplicatia prin browser web")
+
+System(guessTheDrawing, "Guess the Drawing", "Aplicatie web multiplayer pentru desenat si ghicit cuvinte in timp real")
+
+System_Ext(vercel, "Vercel", "Platforma CDN pentru hosting frontend")
+System_Ext(railway, "Railway", "Platforma cloud pentru hosting backend")
+System_Ext(whatsapp, "WhatsApp", "Aplicatie externa pentru partajare link-uri")
+
+Rel(player, guessTheDrawing, "Acceseaza si joaca", "HTTPS/WSS")
+Rel(guessTheDrawing, vercel, "Serveste fisiere statice", "HTTPS")
+Rel(guessTheDrawing, railway, "Ruleaza server Node.js", "Container Docker")
+Rel(player, whatsapp, "Partajeaza link camera", "whatsapp://send")
+
+@enduml
