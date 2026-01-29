@@ -2,15 +2,21 @@ const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
+app.use(express.json());
 app.use(
   cors({
     origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   })
 );
@@ -19,7 +25,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   },
 });
@@ -28,6 +34,209 @@ const scores = new Map();
 const gameState = new Map();
 const rooms = new Map();
 const creators = new Map();
+
+// Persistent user storage with JSON file
+const USERS_FILE = path.join(__dirname, "users.json");
+const users = new Map();
+let userIdCounter = 1;
+
+// Load users from file on startup
+function loadUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const data = fs.readFileSync(USERS_FILE, "utf8");
+      const parsed = JSON.parse(data);
+      parsed.users.forEach(user => {
+        users.set(user.id, user);
+      });
+      userIdCounter = parsed.userIdCounter || 1;
+      console.log(`Loaded ${users.size} users from storage`);
+    }
+  } catch (error) {
+    console.error("Error loading users:", error);
+  }
+}
+
+// Save users to file
+function saveUsers() {
+  try {
+    const data = {
+      users: Array.from(users.values()),
+      userIdCounter
+    };
+    fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), "utf8");
+  } catch (error) {
+    console.error("Error saving users:", error);
+  }
+}
+
+// Load users on server start
+loadUsers();
+
+// Authentication endpoints
+app.post("/auth/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (username.length < 3) {
+      return res.status(400).json({ message: "Username must be at least 3 characters" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    // Check if user already exists
+    const existingUser = Array.from(users.values()).find(
+      u => u.username === username || u.email === email
+    );
+
+    if (existingUser) {
+      return res.status(400).json({ 
+        message: existingUser.username === username 
+          ? "Username already exists" 
+          : "Email already exists" 
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const userId = userIdCounter++;
+    const newUser = {
+      id: userId,
+      username,
+      email,
+      password: hashedPassword,
+      avatar: "😀", // Default avatar
+      createdAt: new Date()
+    };
+
+    users.set(userId, newUser);
+    saveUsers(); // Persist to file
+
+    // Generate token
+    const token = jwt.sign({ userId, username }, JWT_SECRET, { expiresIn: "7d" });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      userId,
+      username,
+      email,
+      avatar: newUser.avatar,
+      token
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server error during registration" });
+  }
+});
+
+app.post("/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Validation
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    // Find user
+    const user = Array.from(users.values()).find(u => u.username === username);
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    // Generate token
+    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: "7d" });
+
+    res.json({
+      message: "Login successful",
+      userId: user.id,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar || "😀",
+      token
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error during login" });
+  }
+});
+
+app.post("/auth/verify", (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = users.get(decoded.userId);
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    res.json({
+      userId: user.id,
+      username: user.username,
+      email: user.email
+    });
+  } catch (error) {
+    console.error("Token verification error:", error);
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
+
+app.patch("/auth/profile/:userId", (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const updates = req.body;
+
+    const user = users.get(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update allowed fields
+    if (updates.avatar !== undefined) {
+      user.avatar = updates.avatar;
+    }
+
+    users.set(userId, user);
+    saveUsers();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ message: "Server error during profile update" });
+  }
+});
+
 
 function generateRoomId() {
   let roomId;
@@ -42,7 +251,22 @@ function getUsers(roomId) {
   return Array.from(ids)
     .map((id) => {
       const s = io.sockets.sockets.get(id);
-      return s ? { id, name: s.username } : null;
+      if (!s) return null;
+      
+      // Include avatar if user is registered
+      let avatar = "👤"; // Default for guests
+      if (s.userId) {
+        const user = users.get(s.userId);
+        if (user && user.avatar) {
+          avatar = user.avatar;
+        }
+      }
+      
+      return { 
+        id, 
+        name: s.username,
+        avatar: avatar
+      };
     })
     .filter(Boolean);
 }
@@ -57,12 +281,16 @@ io.on("connection", (socket) => {
     }
   }
 
-  socket.on("createRoom", (username) => {
+  socket.on("createRoom", (data) => {
+    const username = typeof data === "string" ? data : data.username;
+    const userId = typeof data === "object" ? data.userId : null;
+    
     const roomId = generateRoomId();
     rooms.set(roomId, new Set([socket.id]));
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = username;
+    socket.userId = userId;
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(username, 0);
@@ -72,7 +300,7 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("updateUsers", getUsers(roomId));
   });
 
-  socket.on("joinRoom", ({ roomId, username }) => {
+  socket.on("joinRoom", ({ roomId, username, userId }) => {
     if (!rooms.has(roomId)) {
       socket.emit("error", "Room does not exist!");
       return;
@@ -82,6 +310,7 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     socket.username = username;
+    socket.userId = userId || null;
 
     if (!scores.has(roomId)) scores.set(roomId, new Map());
     scores.get(roomId).set(username, 0);
