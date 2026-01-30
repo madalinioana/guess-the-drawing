@@ -16,7 +16,6 @@ Un joc multiplayer in timp real unde un jucator deseneaza un cuvant, iar ceilalt
 - [Analiza de Securitate](#analiza-de-securitate)
 - [Pipeline CI/CD](#pipeline-cicd)
 - [Design Patterns](#design-patterns)
-- [S dezvoltare asistata de AI](#dezvoltare-asistata-de-ai)
 
 ---
 
@@ -265,5 +264,3 @@ Fundamentul comunicarii prin Socket.IO. Clientii publica evenimente (ex: `drawin
 
 **Observer:**
 Utilizat in componentele React pentru a reactiona la modificarile de stare asincrone (ex: actualizarea listei de mesaje sau a clasamentului in timp real).
-
----
