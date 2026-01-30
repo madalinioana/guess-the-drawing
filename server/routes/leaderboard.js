@@ -3,13 +3,11 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-// Get public leaderboard
 router.get("/", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 50, 100);
     const sortBy = req.query.sortBy || "totalScore";
 
-    // Validate sortBy field
     const validSortFields = ["totalScore", "gamesWon", "gamesPlayed", "correctGuesses"];
     const sortField = validSortFields.includes(sortBy) ? sortBy : "totalScore";
 
@@ -19,7 +17,6 @@ router.get("/", async (req, res) => {
       .limit(limit)
       .lean();
 
-    // Format response
     const formattedLeaderboard = leaderboard.map((user, index) => ({
       rank: index + 1,
       username: user.username,
@@ -51,7 +48,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get user stats by username
 router.get("/user/:username", async (req, res) => {
   try {
     const { username } = req.params;
@@ -64,7 +60,6 @@ router.get("/user/:username", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Get user's rank
     const higherScoreCount = await User.countDocuments({
       "stats.totalScore": { $gt: user.stats.totalScore },
     });

@@ -4,7 +4,6 @@ const { sanitizeUsername } = require("../utils/sanitize");
 
 const router = express.Router();
 
-// Search users by username (for adding friends) - MUST be before /:userId routes
 router.get("/search/:query", async (req, res) => {
   try {
     const { query } = req.params;
@@ -36,7 +35,6 @@ router.get("/search/:query", async (req, res) => {
   }
 });
 
-// Get friends list
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -63,7 +61,6 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-// Get friend requests (sent and received)
 router.get("/:userId/requests", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -98,7 +95,6 @@ router.get("/:userId/requests", async (req, res) => {
   }
 });
 
-// Send friend request (by username)
 router.post("/request", async (req, res) => {
   try {
     const { userId, targetUsername } = req.body;
@@ -122,12 +118,10 @@ router.post("/request", async (req, res) => {
       return res.status(400).json({ message: "Cannot send friend request to yourself" });
     }
 
-    // Check if already friends
     if (sender.friends.includes(target._id)) {
       return res.status(400).json({ message: "Already friends with this user" });
     }
 
-    // Check if request already sent
     const alreadySent = sender.friendRequests?.sent?.some(
       req => req.to.toString() === target._id.toString()
     );
@@ -135,7 +129,6 @@ router.post("/request", async (req, res) => {
       return res.status(400).json({ message: "Friend request already sent" });
     }
 
-    // Check if there's a pending request from target
     const pendingFromTarget = sender.friendRequests?.received?.some(
       req => req.from.toString() === target._id.toString()
     );
@@ -143,13 +136,11 @@ router.post("/request", async (req, res) => {
       return res.status(400).json({ message: "This user already sent you a friend request. Accept it instead!" });
     }
 
-    // Add to sender's sent requests
     if (!sender.friendRequests) {
       sender.friendRequests = { sent: [], received: [] };
     }
     sender.friendRequests.sent.push({ to: target._id });
 
-    // Add to target's received requests
     if (!target.friendRequests) {
       target.friendRequests = { sent: [], received: [] };
     }
@@ -172,7 +163,6 @@ router.post("/request", async (req, res) => {
   }
 });
 
-// Accept friend request
 router.post("/accept", async (req, res) => {
   try {
     const { userId, fromUserId } = req.body;
@@ -184,7 +174,6 @@ router.post("/accept", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Verify there's a pending request
     const requestIndex = user.friendRequests?.received?.findIndex(
       req => req.from.toString() === fromUserId
     );
@@ -193,10 +182,8 @@ router.post("/accept", async (req, res) => {
       return res.status(400).json({ message: "No pending friend request from this user" });
     }
 
-    // Remove from received requests
     user.friendRequests.received.splice(requestIndex, 1);
 
-    // Remove from sender's sent requests
     const senderRequestIndex = sender.friendRequests?.sent?.findIndex(
       req => req.to.toString() === userId
     );
@@ -204,7 +191,6 @@ router.post("/accept", async (req, res) => {
       sender.friendRequests.sent.splice(senderRequestIndex, 1);
     }
 
-    // Add each other as friends
     if (!user.friends.includes(sender._id)) {
       user.friends.push(sender._id);
     }
@@ -229,7 +215,6 @@ router.post("/accept", async (req, res) => {
   }
 });
 
-// Reject friend request
 router.post("/reject", async (req, res) => {
   try {
     const { userId, fromUserId } = req.body;
@@ -241,7 +226,6 @@ router.post("/reject", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Remove from received requests
     const requestIndex = user.friendRequests?.received?.findIndex(
       req => req.from.toString() === fromUserId
     );
@@ -252,7 +236,6 @@ router.post("/reject", async (req, res) => {
 
     user.friendRequests.received.splice(requestIndex, 1);
 
-    // Remove from sender's sent requests if sender exists
     if (sender) {
       const senderRequestIndex = sender.friendRequests?.sent?.findIndex(
         req => req.to.toString() === userId
@@ -272,7 +255,6 @@ router.post("/reject", async (req, res) => {
   }
 });
 
-// Cancel sent friend request
 router.post("/cancel", async (req, res) => {
   try {
     const { userId, toUserId } = req.body;
@@ -284,7 +266,6 @@ router.post("/cancel", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Remove from sent requests
     const requestIndex = user.friendRequests?.sent?.findIndex(
       req => req.to.toString() === toUserId
     );
@@ -295,7 +276,6 @@ router.post("/cancel", async (req, res) => {
 
     user.friendRequests.sent.splice(requestIndex, 1);
 
-    // Remove from target's received requests if target exists
     if (target) {
       const targetRequestIndex = target.friendRequests?.received?.findIndex(
         req => req.from.toString() === userId
@@ -315,7 +295,6 @@ router.post("/cancel", async (req, res) => {
   }
 });
 
-// Remove friend
 router.delete("/:userId/:friendId", async (req, res) => {
   try {
     const { userId, friendId } = req.params;
@@ -327,10 +306,8 @@ router.delete("/:userId/:friendId", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Remove friend from user's list
     user.friends = user.friends.filter(id => id.toString() !== friendId);
 
-    // Remove user from friend's list if friend exists
     if (friend) {
       friend.friends = friend.friends.filter(id => id.toString() !== userId);
       await friend.save();
