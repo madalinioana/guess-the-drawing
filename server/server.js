@@ -5,8 +5,6 @@ const http = require("http");
 const cors = require("cors");
 const crypto = require("crypto");
 const { Server } = require("socket.io");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 
