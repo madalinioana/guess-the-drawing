@@ -1,357 +1,269 @@
 # Guess the Drawing
 
-[![CI Pipeline](https://github.com/madalinioana/guess-the-drawing/actions/workflows/ci.yml/badge.svg)](https://github.com/madalinioana/guess-the-drawing/actions/workflows/ci.yml)
-
 Un joc multiplayer in timp real unde un jucator deseneaza un cuvant, iar ceilalti incearca sa il ghiceasca prin chat inainte sa expire timpul.
 
 [Joaca jocul](https://guess-the-drawing-tau.vercel.app/) | [Video demo](https://youtu.be/7kIcNPx2oTA)
 
 ---
 
-## Tehnologii utilizate
+## Cuprins
+
+- [Tehnologii](#tehnologii)
+- [Functionalitati](#functionalitati)
+- [Instalare](#instalare)
+- [Arhitectura Sistemului](#arhitectura-sistemului)
+- [Asigurarea Calitatii si Testare](#asigurarea-calitatii-si-testare)
+- [Analiza de Securitate](#analiza-de-securitate)
+- [Pipeline CI/CD](#pipeline-cicd)
+- [Design Patterns](#design-patterns)
+- [S dezvoltare asistata de AI](#dezvoltare-asistata-de-ai)
+
+---
+
+## Tehnologii
 
 ### Frontend
-- React 19
-- Vite
-- Socket.IO Client
-- React-Konva (rendering canvas)
+- **React 19:** Framework UI modern
+- **Vite:** Build tool rapid
+- **Socket.IO Client:** Comunicare WebSocket bidirectionala
+- **React-Konva:** Canvas HTML5 pentru desenat
 
 ### Backend
-- Node.js
-- Express
-- Socket.IO
+- **Node.js 18:** Runtime JavaScript
+- **Express:** HTTP server si REST API
+- **Socket.IO:** Server WebSocket pentru real-time
 
 ### Deployment
-- Frontend: Vercel (CDN)
-- Backend: Render.com (Container)
+- **Vercel:** Hosting Frontend (CDN global)
+- **Render.com:** Hosting Backend (Container)
 
 ---
 
 ## Functionalitati
 
-- Creare si acces camere multiplayer
-- Canvas de desenat sincronizat in timp real
-- Sistem de ghicire bazat pe chat
-- Scor dinamic bazat pe viteza de ghicire
-- Clasament live cu ranking jucatori
-- Controale host (kick jucatori, start joc)
-- Partajare camera prin WhatsApp
-- Timer 60 secunde per runda
+### Functionalitati Principale
+- **Camere Multiplayer:** Creare si acces camere cu cod unic
+- **Desenare in timp real:** Sincronizare instanta a canvas-ului
+- **Sistem de Chat:** Mesaje live si mecanism de ghicire a cuvintelor
+- **Scor Dinamic:** Punctaj calculat in functie de timpul ramas
+- **Clasament Live:** Actualizare in timp real a scorurilor
+- **Timer Runda:** Numaratoare inversa sincronizata
+
+### Control Host
+- **Start Joc:** Initierea rundei de catre creatorul camerei
+- **Kick Players:** Moderarea listei de jucatori
+- **Management Camera:** Control total asupra sesiunii
+
+### Functionalitati Aditionale
+- **Partajare WhatsApp:** Link direct pentru invitatii
+- **Reconectare Automata:** Gestionarea intreruperilor de conexiune
+- **Validare Input:** Verificarea numelor si a codurilor de acces
 
 ---
 
-## Instalare si configurare locala
+## Instalare
 
 ### Cerinte preliminare
 - Node.js 18 sau mai nou
 - npm sau yarn
+- Git
 
-### Pasi de instalare
+### Configurare locala
 
-1. Clonare repository:
-   ```bash
-   git clone https://github.com/madalinioana/guess-the-drawing
-   cd guess-the-drawing
-   ```
+1. **Clonare repository:**
+```bash
+git clone https://github.com/madalinioana/guess-the-drawing
+cd guess-the-drawing
+```
 
-2. Instalare dependinte backend:
-   ```bash
-   cd server
-   npm install
-   ```
-
-3. Instalare dependinte frontend:
-   ```bash
-   cd ../client
-   npm install
-   ```
-
-4. Pornire server backend:
-   ```bash
-   cd server
-   node server.js
-   ```
-   Server ruleaza pe `http://localhost:3001`
-
-5. Pornire server development frontend:
-   ```bash
-   cd client
-   npm run dev
-   ```
-   Aplicatie disponibila la `http://localhost:5173`
-
----
-
-## Prezentare generala arhitectura
-
-### Design sistem
-
-Aplicatia urmeaza o arhitectura Client-Server cu comunicare event-driven:
-
-- **Frontend (React SPA):** Gestioneaza rendering UI, input utilizator si desenare canvas
-- **Backend (Node.js):** Administreaza starea jocului, logica camerelor si comunicare WebSocket
-- **Real-time Layer (Socket.IO):** Permite comunicare bidirectionala bazata pe evenimente
-
-### Componente cheie
-
-**Backend:**
-- `GameServer` - Gestioneaza conexiuni Socket.IO si routing
-- `RoomManager` - Operatii CRUD pentru camere joc
-- `GameLogic` - Management runde, scoring si validare cuvinte
-- `PlayerManager` - Tracking stare jucatori
-
-**Frontend:**
-- `App` - Componenta root si routing
-- `Lobby` - Interfata creare si join camere
-- `Room` - Container principal joc
-- `DrawingCanvas` - Interfata desenare bazata pe Konva
-- `Chat` - Afisare mesaje si input ghicire
-- `Leaderboard` - Ranking scoruri jucatori
-- `Timer` - Afisare countdown runda
-
-### Flow date
-
-1. **Creare camera:** Client emit `createRoom` -> Server genereaza ID unic -> Broadcast catre client
-2. **Sincronizare desenare:** Drawer emit evenimente `drawing` -> Server valideaza si broadcast in camera
-3. **Procesare ghicire:** Jucator emit `guess` -> Server valideaza cu cuvantul curent -> Update scoruri daca corect
-4. **Management runda:** Timer expira sau ghicire corecta -> Server trigger `endRound` -> Selecteaza drawer nou
-
-Pentru documentatie arhitecturala detaliata, vezi [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-
----
-
-## Testare
-
-### Teste unitare
-
-Testele sunt implementate folosind Jest (frontend) si Mocha + Chai (backend).
-
-**Teste backend:**
-- RoomManager: `createRoom()`, `addPlayer()`, `removePlayer()`
-- GameLogic: `checkGuess()`, `calculateScore()`, `startRound()`
-- Input Validation: `sanitizeInput()`, `sanitizeUsername()`
-
-**Teste frontend:**
-- DrawingCanvas: emitere strokes, clear canvas, validare drawer
-- Chat: trimitere mesaje, sanitizare input, preventie ghiciri goale
-- Lobby: creare camere, navigare, error handling
-- Leaderboard: sortare scoruri, highlight drawer
-
-### Rulare teste
-
-Backend:
+2. **Configurare Backend:**
 ```bash
 cd server
-npm test
+npm install
+node server.js
 ```
+Serverul va rula pe `http://localhost:3001`
 
-Frontend:
+3. **Configurare Frontend:**
 ```bash
 cd client
-npm test
+npm install
+npm run dev
 ```
-
-Coverage teste: ~70% (unit tests), ~50% (integration tests)
-
-### Rezultate teste
-
-Rezultate teste backend:
-```
-RoomManager Service
-  ✓ should create a new room
-  ✓ should generate unique room IDs
-  ✓ should add player to existing room
-  ✓ should reject if room is full
-
-GameLogic Service
-  ✓ should return true for correct guess
-  ✓ should be case insensitive
-  ✓ should calculate score correctly
-
-12 passing (45ms)
-```
-
-Rezultate teste frontend:
-```
-PASS  src/components/__tests__/Chat.test.jsx
-PASS  src/components/__tests__/Leaderboard.test.jsx
-PASS  src/components/__tests__/DrawingCanvas.test.jsx
-
-Test Suites: 4 passed, 4 total
-Tests: 18 passed, 18 total
-Time: 3.241 s
-```
+Aplicatia va fi disponibila la `http://localhost:5173`
 
 ---
 
-## Structura proiect
+## Arhitectura Sistemului
 
-```plaintext
-guess-the-drawing/
-├── client/                 # Aplicatie React frontend
-│   ├── src/
-│   │   ├── components/    # Componente React
-│   │   ├── services/      # Serviciu Socket.IO client
-│   │   └── App.jsx        # Componenta root
-│   ├── tests/             # Teste unitare Jest
-│   └── package.json
-│
-├── server/                # Aplicatie Node.js backend
-│   ├── services/
-│   │   ├── RoomManager.js
-│   │   ├── GameLogic.js
-│   │   └── PlayerManager.js
-│   ├── utils/
-│   │   └── sanitize.js
-│   ├── tests/             # Teste unitare Mocha
-│   ├── server.js          # Entry point
-│   └── package.json
-│
-└── docs/                  # Documentatie proiect
-    ├── ARCHITECTURE.md
-    ├── TESTING_PLAN.md
-    ├── SECURITY_ANALYSIS.md
-    ├── CICD.md
-    └── diagrams/
-```
+### Sinteza produsului
 
----
+Am optat pentru o arhitectura **Client-Server separata** pentru a asigura un deployment independent si o scalare eficienta a componentelor.
 
-## Design patterns
+**Motivatie:**
+- Utilizarea Vercel CDN pentru o latenta globala minima a interfetei.
+- Utilizarea Render pentru suportul nativ WebSocket necesar backend-ului.
+- Posibilitatea de a actualiza frontend-ul fara a intrerupe conexiunile websocket active.
 
-### Pub/Sub Pattern (Socket.IO)
+### Situatia implementarilor fata de propunerea initiala
 
-Aplicatia implementeaza pattern-ul Publish/Subscribe prin Socket.IO pentru comunicare event-based in timp real:
+| Functionalitate | Propus | Implementat | Diferenta |
+|----------------|--------|-------------|-----------|
+| Camere Multiplayer | Da | Da | Complet functional |
+| Desenare Real-time | Da | Da | Sincronizare prin Socket.IO |
+| Chat si Scoring | Da | Da | Algoritm bazat pe viteza |
+| Autentificare | Da | Da | Login simplificat (modal) |
+| Categorii Cuvinte | Da | Nu | Inlocuit cu input manual |
+| Control Host | Nu | Da | Adaugat pentru moderare |
+| Share WhatsApp | Nu | Da | Functionalitate bonus |
 
-- **Publishers:** Clientii emit evenimente (drawing, guess, createRoom)
-- **Subscribers:** Server-ul si ceilalti clienti asculta evenimente specifice
-- **Rooms:** Grupari logice care izoleaza broadcasting-ul evenimentelor
+**Justificare modificari:**
+Am inlocuit categoriile predefinite cu input manual pentru a oferi jucatorilor libertate totala in alegerea cuvintelor. Functiile de moderare (Host Controls) au fost adaugate pentru a preveni abuzurile in camerele publice.
 
-Exemplu:
-```javascript
-// Publisher (client)
-socket.emit('drawing', {roomId, x, y, color});
+### Diagrame C4
 
-// Subscriber (server)
-socket.on('drawing', (data) => {
-  socket.to(data.roomId).emit('drawingReceived', data);
-});
-```
+**Diagrama de Context (System Context):**
 
-### Observer Pattern
+![System Context](docs/diagrams/c4-system-context.png)
 
-Componentele observa schimbarile de stare ale jocului prin event listeners Socket.IO:
+Prezinta interactiunea utilizatorilor cu sistemul si dependentele externe (Vercel, Render, WhatsApp).
 
-```javascript
-// Componenta Chat observa mesaje noi
-socket.on('newMessage', (message) => {
-  setMessages(prev => [...prev, message]);
-});
+**Diagrama de Containere (Container Diagram):**
 
-// Leaderboard observa update-uri scoruri
-socket.on('scoresUpdated', (players) => {
-  setPlayers(players.sort((a, b) => b.score - a.score));
-});
-```
+![Container](docs/diagrams/c4-container.png)
+
+Detaliaza distributia responsabilitatilor intre React App, Socket.IO si Express Server.
+
+**Diagrame de Componente (Component Diagrams):**
+
+![Frontend Components](docs/diagrams/c4-component-frontend.png)
+*Frontend: Structura modulara React (Lobby, Room, Canvas, Chat)*
+
+![Backend Components](docs/diagrams/c4-component-backend.png)
+*Backend: Gestionarea evenimentelor Socket.IO si starea jocului*
+
+### Cerinte non-functionale si solutii
+
+| Cerinta | Obiectiv | Solutie Arhitecturala |
+|---------|----------|----------------------|
+| **Performanta** | Latenta < 100ms | Conexiune persistenta WebSocket si throttling la evenimente (60fps) |
+| **Scalabilitate** | 50+ utilizatori | CDN pentru statice si containerizare backend |
+| **Disponibilitate** | Uptime ridicat | Mecanism de reconectare automata in client si health checks |
+| **Securitate** | Protectie XSS/DoS | Sanitizare input si limitarea ratei de cereri (Rate Limiting) |
+| **Mentenanta** | Cod modular | Separarea logicii de business de interfata |
 
 ---
 
-## Masuri de securitate
+## Asigurarea Calitatii si Testare
 
-### Validare input
+### Obiective
 
-Toate input-urile utilizatorilor sunt sanitizate server-side:
+Procesul de testare s-a concentrat pe validarea componentelor critice de UI si a stabilitatii conexiunii in timp real.
 
+**Artefacte testate:**
+- **Frontend:** Componentele React (Chat, Leaderboard, Lobby)
+- **Backend:** Gestionarea evenimentelor si validarea datelor
+- **Nivele:** Testare unitara si testare manuala end-to-end
+
+### Metode de testare
+
+**1. Testare Unitara (Jest + React Testing Library)**
+
+S-a utilizat pentru verificarea izolata a componentelor, asigurand randarea corecta si raspunsul la interactiunile utilizatorului.
+
+**Exemplu test Chat:**
 ```javascript
-function sanitizeInput(text) {
-  return text
-    .trim()
-    .substring(0, 100)
-    .replace(/<[^>]*>/g, '')         // Eliminare tag-uri HTML
-    .replace(/javascript:/gi, '')    // Eliminare protocol JS
-    .replace(/on\w+=/gi, '');       // Eliminare event handlers
-}
-```
-
-### Verificari autorizare
-
-Server-ul valideaza permisiunile inainte de a procesa actiuni:
-
-```javascript
-// Doar drawer-ul poate emite evenimente drawing
-socket.on('drawing', (data) => {
-  if (socket.id !== room.drawerId) {
-    return; // Ignora silent
-  }
-  // Proceseaza desenare
-});
-
-// Doar host-ul poate kick jucatori
-socket.on('kickPlayer', (data) => {
-  if (socket.id !== room.hostId) {
-    socket.emit('error', {code: 'UNAUTHORIZED'});
-    return;
-  }
-  // Proceseaza kick
+describe('Chat Component', () => {
+  test('trimite mesaj la apasarea Enter', () => {
+    const handleSend = jest.fn();
+    render(<Chat messages={[]} onSend={handleSend} />);
+    
+    // Simulare input utilizator
+    const input = screen.getByPlaceholderText(/guess/i);
+    fireEvent.change(input, {target: {value: 'casa'}});
+    fireEvent.keyPress(input, {key: 'Enter'});
+    
+    expect(handleSend).toHaveBeenCalledWith('casa');
+  });
 });
 ```
 
-### Rate limiting
+**2. Testare Manuala**
 
-Evenimentele sunt rate-limited pentru a preveni spam:
+Verificarea fluxurilor complete de utilizare (creare camera, joc, chat, deconectare) pe diferite browsere (Chrome, Firefox, Safari) si dispozitive.
 
-- Evenimente drawing: max 60/secunda
-- Evenimente guess: max 5 per 2 secunde
-- Creare camere: max 3 per minut
+### Rezultate
 
-Pentru analiza detaliata de securitate, vezi [docs/SECURITY_ANALYSIS.md](docs/SECURITY_ANALYSIS.md)
+| Metrica | Valoare | Status |
+|---------|---------|--------|
+| Acoperire Cod (Unit) | 70% | Pass |
+| Cazuri Test Manual | 15 | Pass |
+| Bug-uri Critice | 0 | Pass |
+
+---
+
+## Analiza de Securitate
+
+### Riscuri Identificate
+
+| Risc | Impact | Probabilitate |
+|------|--------|---------------|
+| **XSS Injection** | Executie cod malitios in chat/nume | Medie |
+| **Authorization Bypass** | Actiuni neautorizate (kick, desen) | Medie |
+| **DoS Attack** | Suprasolicitarea serverului | Medie |
+
+### Masuri de protectie implementate
+
+**1. Sanitizare Input**
+Toate datele introduse de utilizatori sunt curatate de tag-uri HTML si scripturi inainte de procesare.
+
+**2. Validare Autorizare**
+Serverul verifica permisiunile pentru fiecare actiune critica. Doar jucatorul "Drawer" poate emite evenimente de desenare, si doar "Host"-ul poate elimina jucatori.
+
+**3. Rate Limiting**
+Am implementat limitari pentru frecventa evenimentelor per socket pentru a preveni flood-ul:
+- Desenare: max 60 evenimente/secunda
+- Ghicire: max 5 incercari/2 secunde
+
+**4. Configurare CORS**
+Accesul la API este restrictionat exclusiv domeniului de frontend (Vercel).
 
 ---
 
 ## Pipeline CI/CD
 
-### Integrare continua
+### Medii de lucru
 
-Workflow GitHub Actions ruleaza la fiecare push:
-- Teste unitare backend (Mocha + Chai)
-- Teste unitare frontend (Jest + RTL)
-- Verificari calitate cod ESLint
-- Verificare build
+**Development (Local):**
+- Ruleaza pe localhost
+- Logging detaliat
+- CORS permisiv pentru dezvoltare rapida
 
-### Deployment continuu
+**Production:**
+- Frontend: Vercel | Backend: Render
+- Trigger automat la push pe branch-ul `main`
+- Optimizari de performanta (minification) si securitate (HTTPS, CORS strict)
 
-- **Frontend:** Deployment automat pe Vercel la push pe branch main
-- **Backend:** Deployment automat pe Render la push pe branch main
-- **Preview:** Deployment-uri preview pentru pull requests
+### Fluxul de Integrare si Livrare (GitHub Actions)
 
-Timp deployment: ~2-3 minute pentru ambele servicii
+1. **Continuous Integration (CI):**
+   - La fiecare push sau Pull Request, se ruleaza automat testele unitare (Frontend si Backend).
+   - Se verifica build-ul aplicatiei pentru erori.
 
-Pentru documentatie detaliata CI/CD, vezi [docs/CICD.md](docs/CICD.md)
-
----
-
-## Dezvoltare asistata AI
-
-Acest proiect a utilizat AI (ChatGPT) pentru decizii arhitecturale si ghidare implementare:
-
-### Arii cheie de asistenta
-
-1. **Design arhitectura:** Structura full-stack cu Socket.IO pentru comunicare real-time
-2. **Logica joc:** Sistem bazat pe ture cu timer si rotatie automata drawer
-3. **Sincronizare desenare:** Broadcasting canvas in timp real cu event throttling
-4. **Edge cases:** Gestionare disconnect, ghiciri concurente, management stare camera
-5. **Strategie deployment:** Backend pe Render (suport WebSocket free tier) vs limitari Vercel
-6. **UI/UX:** Customizare brush, feedback vizual, design responsive
-
-Istoric conversatie complet: [ChatGPT link](https://chatgpt.com/share/684f0a50-3e9c-8007-b4a5-e20547ab7b5d)
+2. **Continuous Deployment (CD):**
+   - **Frontend:** Vercel detecteaza modificarile pe `main`, instaleaza dependintele, construieste proiectul si il publica pe CDN.
+   - **Backend:** Render preia codul nou, construieste containerul si reporneste serviciul, efectuand un Health Check final.
 
 ---
 
-## Documentatie
+## Design Patterns
 
-Documentatia completa a proiectului este disponibila in directorul `docs/`:
+In implementare au fost utilizate urmatoarele tipare de proiectare:
 
-- **[Documentatie arhitecturala](docs/ARCHITECTURE.md)** - Diagrame C4, decizii de design, cerinte non-functionale
-- **[Plan de testare](docs/TESTING_PLAN.md)** - Strategii de testare, metodologii si rezultate
-- **[Analiza securitate](docs/SECURITY_ANALYSIS.md)** - Evaluare riscuri si masuri de mitigare
-- **[Pipeline CI/CD](docs/CICD.md)** - Procese deployment si configurari environment-uri
+**Pub/Sub (Publish-Subscribe):**
+Fundamentul comunicarii prin Socket.IO. Clientii publica evenimente (ex: `drawing`), iar serverul le distribuie catre abonati (ceilalti jucatori din camera).
+
+**Observer:**
+Utilizat in componentele React pentru a reactiona la modificarile de stare asincrone (ex: actualizarea listei de mesaje sau a clasamentului in timp real).
+
+---
