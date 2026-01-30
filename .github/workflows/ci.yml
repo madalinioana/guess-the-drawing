@@ -23,7 +23,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./client
-        run: npm ci
+        run: npm install
         
       - name: Run tests
         working-directory: ./client
@@ -52,7 +52,7 @@ jobs:
           
       - name: Install dependencies
         working-directory: ./server
-        run: npm ci
+        run: npm install
         
       - name: Run tests
         working-directory: ./server
@@ -76,7 +76,7 @@ jobs:
       - name: Build frontend
         working-directory: ./client
         run: |
-          npm ci
+          npm install
           npm run build
           
       - name: Check build size
