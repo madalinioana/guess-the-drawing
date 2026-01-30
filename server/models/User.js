@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // Don't include password in queries by default
+      select: false,
     },
     avatar: {
       type: String,
@@ -84,7 +84,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
@@ -94,12 +93,10 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Get public profile (without sensitive data)
 userSchema.methods.toPublicProfile = function () {
   return {
     userId: this._id,
@@ -110,7 +107,6 @@ userSchema.methods.toPublicProfile = function () {
   };
 };
 
-// Static method to get leaderboard
 userSchema.statics.getLeaderboard = async function (limit = 50) {
   return this.find({})
     .select("username avatar stats createdAt")
