@@ -1,0 +1,93 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+        
+      - name: Run tests
+        working-directory: ./client
+        run: npm test -- --coverage --watchAll=false
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./client/coverage
+          flags: frontend
+          name: frontend-coverage
+
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ./server
+        run: npm ci
+        
+      - name: Run tests
+        working-directory: ./server
+        run: npm test
+
+  build-check:
+    runs-on: ubuntu-latest
+    needs: [test-frontend, test-backend]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+          
+      - name: Build frontend
+        working-directory: ./client
+        run: |
+          npm ci
+          npm run build
+          
+      - name: Check build size
+        working-directory: ./client
+        run: |
+          echo "Build size:"
+          du -sh dist
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: client/dist
+          retention-days: 7

@@ -63,6 +63,16 @@ app.use("/auth", authRoutes);
 app.use("/leaderboard", leaderboardRoutes);
 app.use("/friends", friendsRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

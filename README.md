@@ -1,5 +1,7 @@
 # Guess the Drawing
 
+[![CI Pipeline](https://github.com/madalinioana/guess-the-drawing/actions/workflows/ci.yml/badge.svg)](https://github.com/madalinioana/guess-the-drawing/actions/workflows/ci.yml)
+
 Un joc multiplayer in timp real unde un jucator deseneaza un cuvant, iar ceilalti incearca sa il ghiceasca prin chat inainte sa expire timpul.
 
 [Joaca jocul](https://guess-the-drawing-tau.vercel.app/) | [Video demo](https://youtu.be/7kIcNPx2oTA)
