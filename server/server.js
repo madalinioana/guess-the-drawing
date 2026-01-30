@@ -26,53 +26,6 @@ const { sanitizeInput, sanitizeUsername } = require("./utils/sanitize");
 const { isAllowed } = require("./middleware/rateLimiter");
 
 const app = express();
-
-// Connect to MongoDB
-connectDB();
-
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-
-// Allowed origins for CORS and WebSocket
-const allowedOrigins = [
-  FRONTEND_URL,
-  "https://guess-the-drawing-tau.vercel.app",
-  "http://localhost:5173",
-  "http://localhost:3000"
-];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed"));
-    }
-  },
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-// JSON body parser
-app.use(express.json());
-
-// API Routes
-app.use("/auth", authRoutes);
-app.use("/leaderboard", leaderboardRoutes);
-app.use("/friends", friendsRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    uptime: process.uptime(),
-    timestamp: Date.now(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

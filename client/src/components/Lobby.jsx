@@ -12,7 +12,7 @@ export default function Lobby({
 }) {
   return (
     <div className="lobby-container">
-      <h1 className="lobby-title">Guess the Drawing</h1>
+      <h1 className="lobby-title">Guess the Drawing v2.0 🚀</h1>
 
       <input
         className="lobby-input"

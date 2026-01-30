@@ -9,7 +9,7 @@ Guess the Drawing este o aplicatie web multiplayer pentru desenat si ghicit cuvi
 **Stack tehnologic:**
 - Frontend: React 19 + Vite + Socket.IO Client + React-Konva
 - Backend: Node.js + Express + Socket.IO Server
-- Deployment: Vercel (frontend), Railway (backend)
+- Deployment: Vercel (frontend), Render.com (backend)
 
 ### 1.2 Comparatie cu propunerea initiala
 
@@ -52,14 +52,14 @@ Diagrama de context prezinta sistemul la cel mai inalt nivel de abstractie si re
 
 - **Jucator:** Utilizator care acceseaza aplicatia prin browser web (Chrome, Firefox, Safari)
 - **Vercel:** Platforma cloud pentru hosting frontend, asigura distributie prin CDN global si SSL automat
-- **Railway:** Platforma cloud pentru hosting backend, ofera container Docker si conexiuni WebSocket persistente
+- **Render.com:** Platforma cloud PaaS pentru hosting backend, ofera suport nativ pentru Node.js si conexiuni WebSocket
 - **WhatsApp:** Canal extern pentru partajarea link-urilor de invitatie
 
 **Relatii si protocoale:**
 
 1. Jucator <-> Guess the Drawing: HTTPS pentru API REST, WSS pentru comunicare real-time
 2. Guess the Drawing <-> Vercel: Serveste fisiere statice (HTML, JS, CSS)
-3. Guess the Drawing <-> Railway: Ruleaza logica server-side si WebSocket server
+3. Guess the Drawing <-> Render.com: Ruleaza logica server-side si WebSocket server
 4. Jucator <-> WhatsApp: Partajare link prin protocol whatsapp://send
 
 ---
@@ -73,7 +73,7 @@ Diagrama de containere detaliaza componentele majore ale sistemului si tehnologi
 **Decizii arhitecturale principale:**
 
 1. **Separare frontend-backend**
-   - Ratiune: Permite deployment independent si scalare diferentiata. Vercel ofera CDN gratuit pentru frontend, iar Railway suporta WebSocket pentru backend.
+   - Ratiune: Permite deployment independent si scalare diferentiata. Vercel ofera CDN gratuit pentru frontend, iar Render.com suporta WebSocket pentru backend.
    - Trade-off: Creste complexitatea (necesita configurare CORS, doua deployments separate), dar beneficiile in performanta si flexibilitate justifica costul.
 
 2. **Socket.IO peste WebSocket nativ**
@@ -204,8 +204,8 @@ Diagrama de containere detaliaza componentele majore ale sistemului si tehnologi
    - Zero configurare necesara
 
 2. **Backend containerizat**
-   - Railway permite scalare de la 1 la 4 instante
-   - Limitare curenta: In-memory state nu este partajat intre instante
+   - Render.com auto-deploy din Git
+   - Limitare curenta: Free tier (spin down la inactivitate)
    - Pentru trafic peste 200 utilizatori concurenti necesita Redis
 
 3. **Room isolation**
@@ -256,7 +256,7 @@ Diagrama de containere detaliaza componentele majore ale sistemului si tehnologi
    ```
 
 2. **Health check endpoint**
-   - Railway executa ping la /health la fiecare 30 secunde
+   - Render.com executa ping la /health la fiecare 30 secunde
    - Daca 3 verificari consecutive esueaza, server restart automat
 
 3. **Graceful shutdown**
@@ -264,8 +264,8 @@ Diagrama de containere detaliaza componentele majore ale sistemului si tehnologi
    - Inchidere gradua a conexiunilor dupa timeout
 
 **Statistici:**
-- Uptime ultimele 30 zile: 99.8%
-- Downtime total: aproximativ 1.5 ore (mentenanta Railway)
+- Uptime ultimele 30 zile: 99.8% (excluzând perioadele de inactivitate free tier)
+- Downtime total: minim
 
 ---
 

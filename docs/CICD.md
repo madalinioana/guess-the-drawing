@@ -2,7 +2,7 @@
 
 ## 1. Introducere
 
-Acest document descrie procesul de integrare continua (CI) si deployment continuu (CD) pentru aplicatia Guess the Drawing. Infrastructura de deployment foloseste Vercel pentru frontend si Railway pentru backend.
+Acest document descrie procesul de integrare continua (CI) si deployment continuu (CD) pentru aplicatia Guess the Drawing. Infrastructura de deployment foloseste Vercel pentru frontend si Render.com pentru backend.
 
 ---
 
@@ -18,12 +18,12 @@ GitHub Repository
        ├─────────────────┬─────────────────┐
        |                 |                 |
        v                 v                 v
-   GitHub Actions    Vercel Deploy   Railway Deploy
-   (CI Pipeline)     (Frontend)      (Backend)
+   GitHub Actions    Vercel Deploy    Render Deploy
+   (CI Pipeline)     (Frontend)       (Backend)
        |                 |                 |
        v                 v                 v
    Run Tests         Build React      Build Node.js
-   Check Linting     Deploy to CDN    Deploy to Container
+   Check Linting     Deploy to CDN    Start Service
        |                 |                 |
        └─────────────────┴─────────────────┘
                          |
@@ -38,7 +38,7 @@ GitHub Repository
 | **Source Control** | GitHub | Repository principal, version control |
 | **CI Pipeline** | GitHub Actions | Rulare teste, linting, build verification |
 | **Frontend Hosting** | Vercel | Deploy React SPA, CDN global |
-| **Backend Hosting** | Railway | Deploy Node.js server, container Docker |
+| **Backend Hosting** | Render.com | Deploy Node.js server, Web Service |
 
 ---
 
@@ -84,7 +84,7 @@ CLIENT_URL=http://localhost:5173
 
 **Configurare:**
 - **Frontend:** Preview deployments pe Vercel (per branch)
-- **Backend:** Railway environment "staging"
+- **Backend:** Render PR Previews (optional, paid feature) sau environment dedicat
 
 **Trigger:** Pull Request catre main branch
 
@@ -118,29 +118,26 @@ ALLOWED_ORIGINS=*.vercel.app
 
 **Configurare:**
 - **Frontend:** Vercel production (main branch)
-- **Backend:** Railway production environment
+- **Backend:** Render production environment
 
 **Trigger:** Push/merge pe main branch
 
 **Caracteristici:**
 - URL stabil: `https://guess-the-drawing-tau.vercel.app`
-- Auto-scaling (Vercel)
-- Health checks (Railway)
-- Error monitoring (console logs)
-- Zero-downtime deployment
+- Auto-deploy (Render hooks)
+- HTTPS Automat
+- Zero-downtime deployment (aproximativ)
 
 **Environment Variables (production):**
 ```env
 # Vercel
-VITE_API_URL=https://guess-the-drawing-production.up.railway.app
-VITE_WS_URL=wss://guess-the-drawing-production.up.railway.app
+VITE_API_URL=https://guess-the-drawing.onrender.com
+VITE_WS_URL=wss://guess-the-drawing.onrender.com
 
-# Railway
-PORT=3001
+# Render
 NODE_ENV=production
 CLIENT_URL=https://guess-the-drawing-tau.vercel.app
 ALLOWED_ORIGINS=guess-the-drawing-tau.vercel.app
-LOG_LEVEL=error
 ```
 
 ---
@@ -278,58 +275,36 @@ jobs:
 
 ---
 
-### 5.2 Backend Deployment (Railway)
+### 5.2 Backend Deployment (Render)
 
-**Trigger:** Push pe main branch
+**Trigger:** Push pe main branch (prin conexiune GitHub)
 
 **Process:**
 ```
-1. Railway detecteaza push pe GitHub
-2. Creeaza container Docker
-3. Instaleaza dependencies
-4. Expune PORT 3001
-5. Health check pe /health
-6. Rolling deployment (zero downtime)
-7. Opreste container vechi
+1. Render detecteaza push pe GitHub
+2. Cloneaza repository
+3. Ruleaza Build Command (npm install)
+4. Ruleaza Start Command (node server.js)
+5. Health check (daca e configurat)
+6. Switch trafic pe noua instanta
 ```
 
-**Dockerfile (implicit):**
-```dockerfile
-# Railway genereaza automat
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --production
-
-COPY . .
-
-EXPOSE 3001
-
-CMD ["node", "server.js"]
+**Setari Render:**
+```plaintext
+Build Command: npm install
+Start Command: node server.js
+Root Directory: server
+Environment: Node
 ```
 
-**Health check:**
-```javascript
-// server.js
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
-    timestamp: Date.now()
-  });
-});
-```
-
-**Features Railway:**
-- **Auto-scaling:** 1-4 instante bazat pe load
-- **Persistent Connections:** WebSocket support
+**Features Render:**
+- **Auto-deploy:** Conexiune directa cu GitHub
+- **WebSockets:** Suport nativ (chiar si pe Free Tier)
 - **Logs:** Real-time logs in dashboard
-- **Metrics:** CPU, RAM, network usage
-- **Rollback:** Deploy anterior cu 1 click
+- **Free Tier:** 750 ore/luna (suficient pentru 1 instanta non-stop)
+- **Spin Down:** Se opreste dupa 15 min de inactivitate (Free tier)
 
-**Durata deployment:** 2-3 minute
+**Durata deployment:** 2-4 minute
 
 ---
 
@@ -453,16 +428,16 @@ vercel rollback [deployment-url]
 
 **Durata:** <30 secunde
 
-### 8.2 Rollback Railway (backend)
+### 8.2 Rollback Render (backend)
 
 ```bash
-# Railway Dashboard
-1. Deployments tab
-2. Select previous deployment
-3. Click "Redeploy"
+# Render Dashboard
+1. Events tab
+2. Select previous deploy
+3. Click "Rollback to this deploy"
 ```
 
-**Durata:** 1-2 minute (rebuild container)
+**Durata:** 1-2 minute
 
 ### 8.3 Git rollback (ultimate)
 
@@ -592,7 +567,7 @@ npm run build  # Test local
 
 ## 12. Concluzii
 
-Pipeline-ul CI/CD actual asigura deployment rapid si sigur pentru aplicatia Guess the Drawing. Folosirea Vercel si Railway simplifica procesul si elimina nevoia de infrastructura complexa.
+Pipeline-ul CI/CD actual asigura deployment rapid si sigur pentru aplicatia Guess the Drawing. Folosirea Vercel si Render.com simplifica procesul si elimina nevoia de infrastructura complexa.
 
 **Puncte forte:**
 - Deployment automat la push

@@ -23,7 +23,7 @@ Un joc multiplayer in timp real unde un jucator deseneaza un cuvant, iar ceilalt
 
 ### Deployment
 - Frontend: Vercel (CDN)
-- Backend: Railway (Container)
+- Backend: Render.com (Container)
 
 ---
 
@@ -321,7 +321,7 @@ Workflow GitHub Actions ruleaza la fiecare push:
 ### Deployment continuu
 
 - **Frontend:** Deployment automat pe Vercel la push pe branch main
-- **Backend:** Deployment automat pe Railway la push pe branch main
+- **Backend:** Deployment automat pe Render la push pe branch main
 - **Preview:** Deployment-uri preview pentru pull requests
 
 Timp deployment: ~2-3 minute pentru ambele servicii
@@ -340,7 +340,7 @@ Acest proiect a utilizat AI (ChatGPT) pentru decizii arhitecturale si ghidare im
 2. **Logica joc:** Sistem bazat pe ture cu timer si rotatie automata drawer
 3. **Sincronizare desenare:** Broadcasting canvas in timp real cu event throttling
 4. **Edge cases:** Gestionare disconnect, ghiciri concurente, management stare camera
-5. **Strategie deployment:** Backend pe Railway (suport WebSocket) vs limitari Vercel
+5. **Strategie deployment:** Backend pe Render (suport WebSocket free tier) vs limitari Vercel
 6. **UI/UX:** Customizare brush, feedback vizual, design responsive
 
 Istoric conversatie complet: [ChatGPT link](https://chatgpt.com/share/684f0a50-3e9c-8007-b4a5-e20547ab7b5d)
