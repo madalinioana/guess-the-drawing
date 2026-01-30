@@ -8,17 +8,14 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const JWT_EXPIRES_IN = "7d";
 
-// Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
-// Register new user
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Sanitize inputs
     const cleanUsername = sanitizeUsername(username);
     const cleanEmail = sanitizeInput(email);
 
@@ -34,7 +31,6 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    // Check if username or email already exists
     const existingUser = await User.findOne({
       $or: [{ username: cleanUsername }, { email: cleanEmail.toLowerCase() }],
     });
@@ -46,7 +42,6 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Create new user
     const user = new User({
       username: cleanUsername,
       email: cleanEmail.toLowerCase(),
@@ -55,7 +50,6 @@ router.post("/register", async (req, res) => {
 
     await user.save();
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -75,7 +69,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login user
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -86,21 +79,18 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Username and password are required" });
     }
 
-    // Find user and include password for comparison
     const user = await User.findOne({ username: cleanUsername }).select("+password");
 
     if (!user) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.json({
@@ -117,7 +107,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Verify token
 router.post("/verify", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -148,7 +137,6 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-// Update profile
 router.patch("/profile/:userId", async (req, res) => {
   try {
     const { userId } = req.params;

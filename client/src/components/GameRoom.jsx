@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import Header from "./Header";
 import Chat from "./Chat";
 import DrawingBoard from "./DrawingBoard";
-import WinnerDisplay from "./WinnerDisplay";
 import Leaderboard from "./Leaderboard";
 import { toast } from "react-toastify";
 import "./GameRoom.css";
@@ -78,8 +77,6 @@ export default function GameRoom(props) {
       />
 
       <Leaderboard scores={scores} users={users} />
-
-      {game.lastWinner && <WinnerDisplay winner={game.lastWinner} />}
 
       {isCreator && (
         <div className="kick-panel">
