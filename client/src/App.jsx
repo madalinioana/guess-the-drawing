@@ -17,7 +17,6 @@ import "./ToastOverrides.css";
 import "./App.css";
 
 function App() {
-  // state for username, room, messages, scores, etc.
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
   const [inputRoomId, setInputRoomId] = useState("");
@@ -34,30 +33,25 @@ function App() {
     lastWinner: ""
   });
   const [scores, setScores] = useState([]);
-  
-  // Authentication state
+
   const [user, setUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // View state for navigation
-  const [currentView, setCurrentView] = useState("lobby"); // "lobby" or "leaderboard"
+  const [currentView, setCurrentView] = useState("lobby");
 
-  // Friends state
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showFriendRequestsModal, setShowFriendRequestsModal] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   const socketIdRef = useRef("");
 
-  // Load user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        // Pre-fill username if user is logged in
         if (parsedUser.username) {
           setUsername(parsedUser.username);
         }
@@ -67,7 +61,6 @@ function App() {
     }
   }, []);
 
-  // Register user as online when logged in
   useEffect(() => {
     if (user?.id) {
       socket.emit("register-user", user.id);
@@ -75,7 +68,6 @@ function App() {
     }
   }, [user?.id]);
 
-  // Fetch pending friend requests count
   const fetchPendingRequestsCount = async () => {
     if (!user?.id) return;
     try {
@@ -86,7 +78,6 @@ function App() {
     }
   };
 
-  // Handle room invites from friends
   useEffect(() => {
     const handleRoomInvite = ({ roomId, fromUsername, fromAvatar }) => {
       toast.info(
@@ -124,7 +115,6 @@ function App() {
   }, [username, user]);
 
   useEffect(() => {
-    // check for invite room in URL params
     const params = new URLSearchParams(window.location.search);
     const inviteRoom = params.get("room");
     if (inviteRoom) {
@@ -135,7 +125,6 @@ function App() {
   }, []);
 
   const handleLeaveRoom = () => {
-    // leave the room and reset state
     socket.emit("leave-room");
     setRoomId("");
     setIsCreator(false);
@@ -157,7 +146,6 @@ function App() {
   };
 
   useEffect(() => {
-    // setup socket listeners
     socketIdRef.current = socket.id;
 
     socket.on("connect", () => {
@@ -293,7 +281,6 @@ function App() {
     );
 
     return () => {
-      // cleanup listeners on component unmount
       socket.off("roomCreated", handleRoomCreated);
       socket.off("roomJoined", handleRoomJoined);
       socket.off("updateUsers", handleUpdateUsers);
@@ -350,7 +337,6 @@ function App() {
     }
   };
 
-  // Authentication handlers
   const handleLogin = async (credentials) => {
     try {
       const data = await authService.login(credentials.username, credentials.password);
@@ -416,7 +402,6 @@ function App() {
     localStorage.removeItem("user");
     setUsername("");
     
-    // If in a room, leave it
     if (roomId) {
       handleLeaveRoom();
     }
@@ -465,9 +450,7 @@ function App() {
     }
   };
 
-  // Render based on current view
   const renderContent = () => {
-    // If in a game room, show the game
     if (roomId) {
       return (
         <GameRoom
@@ -486,7 +469,6 @@ function App() {
       );
     }
 
-    // Otherwise, show based on currentView
     switch (currentView) {
       case "leaderboard":
         return <PublicLeaderboard onBack={() => setCurrentView("lobby")} />;
@@ -508,7 +490,6 @@ function App() {
 
   return (
     <>
-      {/* Auth buttons - fixed position at top right, only visible in lobby */}
       {!roomId && currentView === "lobby" && (
         <div className="auth-fixed-container">
           <AuthButton
@@ -520,7 +501,6 @@ function App() {
         </div>
       )}
 
-      {/* Floating Friends Panel - visible when not on leaderboard */}
       {currentView !== "leaderboard" && (
         <FriendsPanel
           user={user}

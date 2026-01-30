@@ -25,18 +25,15 @@ export default function FriendsPanel({
   useEffect(() => {
     if (!socket || friends.length === 0) return;
 
-    // Get online statuses of friends
     const friendIds = friends.map(f => f.userId);
     socket.emit("get-friends-online", friendIds);
 
-    // Listen for online status updates
     const handleOnlineStatus = (statuses) => {
       setOnlineStatuses(statuses);
     };
 
     socket.on("friends-online-status", handleOnlineStatus);
 
-    // Periodically refresh online statuses
     const interval = setInterval(() => {
       socket.emit("get-friends-online", friendIds);
     }, 30000);
@@ -52,7 +49,6 @@ export default function FriendsPanel({
 
     const handleInviteSent = ({ targetUserId }) => {
       setInviteSent(prev => ({ ...prev, [targetUserId]: true }));
-      // Reset after 3 seconds
       setTimeout(() => {
         setInviteSent(prev => ({ ...prev, [targetUserId]: false }));
       }, 3000);

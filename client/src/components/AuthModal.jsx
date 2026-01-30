@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./AuthModal.css";
 
 export default function AuthModal({ isOpen, onClose, onLogin, onRegister }) {
-  const [mode, setMode] = useState("login"); // "login" or "register"
+  const [mode, setMode] = useState("login");
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -16,7 +16,6 @@ export default function AuthModal({ isOpen, onClose, onLogin, onRegister }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
