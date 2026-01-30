@@ -179,3 +179,57 @@ body {
   margin-top: 5px;
   font-style: italic;
 }
+
+/* Invite toast styling */
+.invite-toast {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invite-accept-btn {
+  background-color: #00ff00;
+  color: #000;
+  border: 2px solid #000;
+  padding: 8px 16px;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+  margin-top: 5px;
+}
+
+.invite-accept-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* Responsive adjustments for floating panels */
+@media (max-width: 768px) {
+  .friends-panel.floating {
+    width: 200px;
+    max-height: 40vh;
+  }
+
+  .chat {
+    width: 280px;
+    height: 350px;
+  }
+}
+
+@media (max-width: 500px) {
+  .friends-panel.floating {
+    left: 10px;
+    top: 10px;
+    width: 180px;
+    max-height: 35vh;
+  }
+
+  .chat {
+    right: 10px;
+    bottom: 10px;
+    width: 220px;
+    height: 300px;
+  }
+}
