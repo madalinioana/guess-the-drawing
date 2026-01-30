@@ -10,38 +10,58 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 
-// Database connection
 const connectDB = require("./config/db");
-
-// Models
 const User = require("./models/User");
 
-// Routes
 const authRoutes = require("./routes/auth");
 const leaderboardRoutes = require("./routes/leaderboard");
 const friendsRoutes = require("./routes/friends");
 
-// Security utilities
 const { sanitizeInput, sanitizeUsername } = require("./utils/sanitize");
 const { isAllowed } = require("./middleware/rateLimiter");
 
+connectDB();
+
 const app = express();
 const server = http.createServer(app);
+
+const corsOrigin = (origin, callback) => {
+  if (!origin) {
+    return callback(null, true);
+  }
+
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://guess-the-drawing-tau.vercel.app'
+  ];
+
+  if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+    callback(null, true);
+  } else {
+    callback(new Error("CORS not allowed"));
+  }
+};
+
+const corsOptions = {
+  origin: corsOrigin,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+
+app.use("/api/auth", authRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/friends", friendsRoutes);
+
 const io = new Server(server, {
-  cors: {
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS not allowed"));
-      }
-    },
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
+  cors: corsOptions,
+  maxHttpBufferSize: 1e6
 });
 
-// Connection tracking for rate limiting
 const connections = new Map();
 const MAX_CONNECTIONS_PER_IP = 5;
 
@@ -49,9 +69,8 @@ const scores = new Map();
 const gameState = new Map();
 const rooms = new Map();
 const creators = new Map();
-const onlineUsers = new Map(); // Map<userId, socketId> - track online logged-in users
+const onlineUsers = new Map();
 
-// Cryptographically secure Room ID generation
 function generateRoomId() {
   let roomId;
   do {
@@ -60,20 +79,12 @@ function generateRoomId() {
   return roomId;
 }
 
-// Validate drawing data structure and ranges
 function validateDrawingData(data) {
   if (!data || typeof data !== "object") return false;
-  
-  // Validate coordinates if present
   if (data.x !== undefined && (typeof data.x !== "number" || data.x < 0 || data.x > 2000)) return false;
   if (data.y !== undefined && (typeof data.y !== "number" || data.y < 0 || data.y > 2000)) return false;
-  
-  // Validate line width
   if (data.lineWidth !== undefined && (typeof data.lineWidth !== "number" || data.lineWidth < 1 || data.lineWidth > 50)) return false;
-  
-  // Validate color (should be a valid hex or color string)
   if (data.color !== undefined && typeof data.color !== "string") return false;
-  
   return true;
 }
 
@@ -83,7 +94,6 @@ function getUsers(roomId) {
     .map((id) => {
       const s = io.sockets.sockets.get(id);
       if (!s) return null;
-
       return {
         id,
         name: s.username,
@@ -94,10 +104,8 @@ function getUsers(roomId) {
     .filter(Boolean);
 }
 
-// Helper function to update user stats in MongoDB
 async function updateUserStats(userId, statsUpdate) {
   if (!userId) return;
-
   try {
     await User.findByIdAndUpdate(userId, {
       $inc: statsUpdate
@@ -107,7 +115,6 @@ async function updateUserStats(userId, statsUpdate) {
   }
 }
 
-// WebSocket middleware: Connection limit per IP
 io.use((socket, next) => {
   const ip = socket.handshake.address;
   const count = connections.get(ip) || 0;
@@ -118,7 +125,6 @@ io.use((socket, next) => {
   
   connections.set(ip, count + 1);
   
-  // Cleanup on disconnect
   socket.on("disconnect", () => {
     const currentCount = connections.get(ip) || 1;
     if (currentCount <= 1) {
@@ -127,17 +133,6 @@ io.use((socket, next) => {
       connections.set(ip, currentCount - 1);
     }
   });
-  
-  next();
-});
-
-// WebSocket middleware: Origin validation
-io.use((socket, next) => {
-  const origin = socket.handshake.headers.origin;
-  
-  if (origin && !allowedOrigins.includes(origin)) {
-    return next(new Error("Invalid origin"));
-  }
   
   next();
 });
@@ -152,31 +147,24 @@ io.on("connection", (socket) => {
     }
   }
 
-  // Register user as online (for logged-in users)
   socket.on("register-user", (userId) => {
     if (userId) {
       socket.registeredUserId = userId;
       onlineUsers.set(userId, socket.id);
-      console.log(`User ${userId} registered as online`);
     }
   });
 
-  // Get online status of friends
   socket.on("get-friends-online", (friendUserIds) => {
     if (!Array.isArray(friendUserIds)) return;
-
     const onlineStatuses = {};
     friendUserIds.forEach(friendId => {
       onlineStatuses[friendId] = onlineUsers.has(friendId);
     });
-
     socket.emit("friends-online-status", onlineStatuses);
   });
 
-  // Send room invite to a friend
   socket.on("invite-to-room", ({ targetUserId, roomId }) => {
     const targetSocketId = onlineUsers.get(targetUserId);
-
     if (!targetSocketId) {
       socket.emit("invite-error", { message: "Friend is not online" });
       return;
@@ -188,7 +176,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Send invite to target
     targetSocket.emit("room-invite", {
       roomId,
       fromUsername: socket.username,
@@ -200,18 +187,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("createRoom", (data) => {
-    // Rate limiting
     if (!isAllowed(socket.id, "createRoom")) {
       socket.emit("error", "Too many rooms created. Please wait.");
       return;
     }
 
-    // Handle both old format (string) and new format (object)
     const username = typeof data === "string" ? data : data?.username;
     const userId = typeof data === "object" ? data?.userId : null;
     const avatar = typeof data === "object" ? data?.avatar : "👤";
 
-    // Sanitize username
     const cleanUsername = sanitizeUsername(username);
     if (!cleanUsername) {
       socket.emit("error", "Invalid username");
@@ -235,7 +219,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joinRoom", ({ roomId, username, userId, avatar }) => {
-    // Rate limiting
     if (!isAllowed(socket.id, "joinRoom")) {
       socket.emit("error", "Too many join attempts. Please wait.");
       return;
@@ -246,7 +229,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Sanitize username
     const cleanUsername = sanitizeUsername(username);
     if (!cleanUsername) {
       socket.emit("error", "Invalid username");
@@ -298,7 +280,6 @@ io.on("connection", (socket) => {
     const state = gameState.get(roomId);
     if (!state || state.drawerId !== socket.id || state.phase !== "select-word") return;
 
-    // Sanitize word
     const cleanWord = sanitizeInput(word);
     if (!cleanWord) return;
 
@@ -306,7 +287,6 @@ io.on("connection", (socket) => {
     state.drawingTime = 60;
     state.phase = "drawing";
 
-    // Send word to drawer
     socket.emit("setPhase", { 
       phase: "drawing", 
       word: cleanWord, 
@@ -314,7 +294,6 @@ io.on("connection", (socket) => {
       drawer: socket.username
     });
     
-    // Send word hint (underscores for length) to guessers
     const wordHint = cleanWord.replace(/[a-zA-Z0-9]/g, "_");
     socket.to(roomId).emit("setPhase", {
       phase: "drawing",
@@ -339,13 +318,11 @@ io.on("connection", (socket) => {
     const state = gameState.get(roomId);
     if (!roomId) return;
 
-    // Rate limiting
     if (!isAllowed(socket.id, "message")) {
       socket.emit("rateLimited", "Too many messages. Please slow down.");
       return;
     }
 
-    // Sanitize message
     const cleanMessage = sanitizeInput(message);
     if (!cleanMessage) return;
 
@@ -375,7 +352,6 @@ io.on("connection", (socket) => {
       const guesserScore = Math.ceil(10 * (timeLeft / maxTime));
       const drawerScore = Math.ceil(10 * ((maxTime - timeLeft) / maxTime));
 
-      // Store guesser info with their score and userId
       state.guessedPlayers.set(guesserName, { score: guesserScore, userId: guesserUserId });
 
       if (roomScores) {
@@ -383,7 +359,6 @@ io.on("connection", (socket) => {
         io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
       }
 
-      // Update guesser stats in database
       if (guesserUserId) {
         updateUserStats(guesserUserId, {
           "stats.correctGuesses": 1,
@@ -408,21 +383,11 @@ io.on("connection", (socket) => {
     const roomId = socket.roomId;
     if (!roomId) return;
     
-    // Rate limiting for drawing events
-    if (!isAllowed(socket.id, "drawing")) {
-      return; // Silently ignore excessive drawing events
-    }
+    if (!isAllowed(socket.id, "drawing")) return;
+    if (!validateDrawingData(data)) return;
     
-    // Validate drawing data
-    if (!validateDrawingData(data)) {
-      return; // Invalid data structure
-    }
-    
-    // Verify sender is the drawer (anti-cheat)
     const state = gameState.get(roomId);
-    if (state && state.phase === "drawing" && socket.id !== state.drawerId) {
-      return; // Not the drawer, ignore
-    }
+    if (state && state.phase === "drawing" && socket.id !== state.drawerId) return;
     
     socket.broadcast.to(roomId).emit("receive-drawing", data);
   });
@@ -431,11 +396,8 @@ io.on("connection", (socket) => {
     const roomId = socket.roomId;
     if (!roomId) return;
     
-    // Verify sender is the drawer
     const state = gameState.get(roomId);
-    if (state && state.phase === "drawing" && socket.id !== state.drawerId) {
-      return; // Not the drawer, ignore
-    }
+    if (state && state.phase === "drawing" && socket.id !== state.drawerId) return;
     
     socket.broadcast.to(roomId).emit("clear-board");
   });
@@ -443,7 +405,6 @@ io.on("connection", (socket) => {
   socket.on("kick-player", ({ targetId, roomId }) => {
     const room = rooms.get(roomId);
     
-    // Host validation - only the room creator can kick players
     if (!room || creators.get(roomId) !== socket.id) {
       socket.emit("error", { code: "UNAUTHORIZED", message: "Only the host can kick players" });
       return;
@@ -465,7 +426,6 @@ io.on("connection", (socket) => {
       }
 
       io.to(roomId).emit("players-update", getUsers(roomId));
-      console.log(`Player ${targetId} (${username}) was kicked from room ${roomId}`);
     }
   });
 
@@ -505,8 +465,6 @@ io.on("connection", (socket) => {
       socket.leave(roomId);
       delete socket.roomId;
       delete socket.username;
-
-      console.log(`${username} left room ${roomId}`);
     }
   });
 
@@ -518,7 +476,6 @@ io.on("connection", (socket) => {
       if (rooms.get(roomId).size === 0) rooms.delete(roomId);
     }
 
-    // Remove from online users
     if (socket.registeredUserId) {
       onlineUsers.delete(socket.registeredUserId);
     }
@@ -526,6 +483,7 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id);
   });
 });
+
 async function endRound(roomId, drawerScore = 10) {
   const state = gameState.get(roomId);
   if (!state) return;
@@ -553,7 +511,6 @@ async function endRound(roomId, drawerScore = 10) {
 
     io.to(roomId).emit("updateScores", Array.from(roomScores.entries()));
 
-    // Update drawer stats in database
     if (drawerUserId) {
       await updateUserStats(drawerUserId, {
         "stats.drawingsCompleted": 1,
@@ -562,7 +519,6 @@ async function endRound(roomId, drawerScore = 10) {
       });
     }
 
-    // Update gamesPlayed for all guessers
     if (state.guessedPlayers) {
       for (const [, guesserData] of state.guessedPlayers) {
         if (guesserData.userId) {
