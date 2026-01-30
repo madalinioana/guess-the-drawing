@@ -19,8 +19,11 @@ describe("Header component", () => {
   });
 
   test("displays player names", () => {
-    // provide users and check if names are displayed
-    const users = [{ id: "1", name: "Ana" }, { id: "2", name: "George" }];
+    // provide users and check if names are displayed (with avatars)
+    const users = [
+      { id: "1", name: "Ana", avatar: "👤" },
+      { id: "2", name: "George", avatar: "👤" }
+    ];
     render(
       <Header
         roomId="4321"
@@ -30,7 +33,9 @@ describe("Header component", () => {
         onStartGame={() => {}}
       />
     );
-    expect(screen.getByText(/Ana, George/)).toBeInTheDocument();
+    // The component displays avatars alongside names
+    expect(screen.getByText(/Ana/)).toBeInTheDocument();
+    expect(screen.getByText(/George/)).toBeInTheDocument();
   });
 
   test("shows 'Creator' badge if user is creator", () => {
