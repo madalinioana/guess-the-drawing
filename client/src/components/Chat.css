@@ -15,6 +15,15 @@
   flex-direction: column;
   z-index: 1000;
   box-sizing: border-box;
+  transition: height 0.2s ease;
+}
+
+.chat.minimized {
+  height: auto;
+}
+
+.chat.minimized .chat-header {
+  margin-bottom: 10px;
 }
 
 .chat-header {
@@ -36,6 +45,30 @@
   height: 4px;
   background-color: #000;
   margin-left: 10px;
+  margin-right: 10px;
+}
+
+.minimize-btn {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #000;
+  background-color: #fff;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.minimize-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+  background-color: #ffffcc;
 }
 
 .messages {

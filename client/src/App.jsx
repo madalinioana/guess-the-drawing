@@ -6,8 +6,12 @@ import AuthModal from "./components/AuthModal";
 import AuthButton from "./components/AuthButton";
 import ProfileModal from "./components/ProfileModal";
 import PublicLeaderboard from "./components/PublicLeaderboard";
+import FriendsPanel from "./components/FriendsPanel";
+import AddFriendModal from "./components/AddFriendModal";
+import FriendRequestsModal from "./components/FriendRequestsModal";
 import { ToastContainer, toast } from "react-toastify";
 import { authService } from "./services/authService";
+import { friendsService } from "./services/friendsService";
 import "react-toastify/dist/ReactToastify.css";
 import "./ToastOverrides.css";
 import "./App.css";
@@ -39,6 +43,11 @@ function App() {
   // View state for navigation
   const [currentView, setCurrentView] = useState("lobby"); // "lobby" or "leaderboard"
 
+  // Friends state
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [showFriendRequestsModal, setShowFriendRequestsModal] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
   const socketIdRef = useRef("");
 
   // Load user from localStorage on mount
@@ -57,6 +66,62 @@ function App() {
       }
     }
   }, []);
+
+  // Register user as online when logged in
+  useEffect(() => {
+    if (user?.id) {
+      socket.emit("register-user", user.id);
+      fetchPendingRequestsCount();
+    }
+  }, [user?.id]);
+
+  // Fetch pending friend requests count
+  const fetchPendingRequestsCount = async () => {
+    if (!user?.id) return;
+    try {
+      const data = await friendsService.getFriendRequests(user.id);
+      setPendingRequestsCount(data.received?.length || 0);
+    } catch (error) {
+      console.error("Failed to fetch friend requests count:", error);
+    }
+  };
+
+  // Handle room invites from friends
+  useEffect(() => {
+    const handleRoomInvite = ({ roomId, fromUsername, fromAvatar }) => {
+      toast.info(
+        <div className="custom-toast-info invite-toast">
+          <span>{fromAvatar} <strong>{fromUsername}</strong> invited you to play!</span>
+          <button
+            className="invite-accept-btn"
+            onClick={() => {
+              setInputRoomId(roomId);
+              if (username) {
+                socket.emit("joinRoom", {
+                  roomId,
+                  username,
+                  userId: user?.id || null,
+                  avatar: user?.avatar || "👤"
+                });
+              }
+            }}
+          >
+            Join
+          </button>
+        </div>,
+        {
+          autoClose: 15000,
+          closeOnClick: false,
+        }
+      );
+    };
+
+    socket.on("room-invite", handleRoomInvite);
+
+    return () => {
+      socket.off("room-invite", handleRoomInvite);
+    };
+  }, [username, user]);
 
   useEffect(() => {
     // check for invite room in URL params
@@ -402,7 +467,7 @@ function App() {
 
   // Render based on current view
   const renderContent = () => {
-    // If in a game room, always show the game
+    // If in a game room, show the game
     if (roomId) {
       return (
         <GameRoom
@@ -455,6 +520,18 @@ function App() {
         </div>
       )}
 
+      {/* Floating Friends Panel - visible when not on leaderboard */}
+      {currentView !== "leaderboard" && (
+        <FriendsPanel
+          user={user}
+          socket={socket}
+          roomId={roomId}
+          onShowAddFriend={() => setShowAddFriendModal(true)}
+          onShowFriendRequests={() => setShowFriendRequestsModal(true)}
+          pendingRequestsCount={pendingRequestsCount}
+        />
+      )}
+
       {renderContent()}
 
       <AuthModal
@@ -469,6 +546,20 @@ function App() {
         onClose={handleCloseProfileModal}
         user={user}
         onUpdateProfile={handleUpdateProfile}
+      />
+
+      <AddFriendModal
+        isOpen={showAddFriendModal}
+        onClose={() => setShowAddFriendModal(false)}
+        user={user}
+        onFriendRequestSent={fetchPendingRequestsCount}
+      />
+
+      <FriendRequestsModal
+        isOpen={showFriendRequestsModal}
+        onClose={() => setShowFriendRequestsModal(false)}
+        user={user}
+        onRequestHandled={fetchPendingRequestsCount}
       />
 
       <ToastContainer

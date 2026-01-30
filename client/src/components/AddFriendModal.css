@@ -1,0 +1,169 @@
+.add-friend-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+}
+
+.add-friend-container {
+  background-color: #ffff66;
+  border: 4px solid #000;
+  box-shadow: 8px 8px 0 #000;
+  padding: 25px;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+}
+
+.add-friend-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #000;
+  font-weight: bold;
+  line-height: 1;
+  transition: transform 0.1s ease;
+}
+
+.add-friend-close:hover {
+  transform: scale(1.2);
+}
+
+.add-friend-title {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #ff0033;
+  text-shadow: 2px 2px #000;
+}
+
+.add-friend-form {
+  margin-bottom: 15px;
+}
+
+.add-friend-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.add-friend-input {
+  flex: 1;
+  padding: 12px;
+  border: 3px solid #000;
+  border-radius: 0;
+  font-size: 1rem;
+  font-family: 'Comic Sans MS', cursive;
+  background-color: #fff;
+  outline: none;
+}
+
+.add-friend-input:focus {
+  background-color: #fffacd;
+}
+
+.add-friend-submit {
+  padding: 12px 20px;
+  border: 3px solid #000;
+  background-color: #00ff00;
+  color: #000;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #000;
+  transition: all 0.1s ease;
+}
+
+.add-friend-submit:hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.add-friend-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.search-loading,
+.no-results {
+  text-align: center;
+  padding: 15px;
+  color: #666;
+  font-style: italic;
+}
+
+.search-results {
+  margin-top: 15px;
+  border-top: 3px solid #000;
+  padding-top: 15px;
+}
+
+.search-results h4 {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+}
+
+.search-results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #fff;
+  border: 2px solid #000;
+  margin-bottom: 8px;
+}
+
+.search-result-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-result-avatar {
+  font-size: 1.4rem;
+}
+
+.search-result-name {
+  font-weight: 600;
+}
+
+.search-result-add {
+  padding: 6px 15px;
+  border: 2px solid #000;
+  background-color: #0066ff;
+  color: #fff;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+}
+
+.search-result-add:hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.search-result-add:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}

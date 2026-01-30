@@ -19,6 +19,7 @@ const User = require("./models/User");
 // Routes
 const authRoutes = require("./routes/auth");
 const leaderboardRoutes = require("./routes/leaderboard");
+const friendsRoutes = require("./routes/friends");
 
 // Security utilities
 const { sanitizeInput, sanitizeUsername } = require("./utils/sanitize");
@@ -49,7 +50,7 @@ app.use(
         callback(new Error("CORS not allowed"));
       }
     },
-    methods: ["GET", "POST", "PATCH"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
   })
 );
@@ -60,6 +61,7 @@ app.use(express.json());
 // API Routes
 app.use("/auth", authRoutes);
 app.use("/leaderboard", leaderboardRoutes);
+app.use("/friends", friendsRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -84,6 +86,7 @@ const scores = new Map();
 const gameState = new Map();
 const rooms = new Map();
 const creators = new Map();
+const onlineUsers = new Map(); // Map<userId, socketId> - track online logged-in users
 
 // Cryptographically secure Room ID generation
 function generateRoomId() {
@@ -185,6 +188,53 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("players-update", getUsers(roomId));
     }
   }
+
+  // Register user as online (for logged-in users)
+  socket.on("register-user", (userId) => {
+    if (userId) {
+      socket.registeredUserId = userId;
+      onlineUsers.set(userId, socket.id);
+      console.log(`User ${userId} registered as online`);
+    }
+  });
+
+  // Get online status of friends
+  socket.on("get-friends-online", (friendUserIds) => {
+    if (!Array.isArray(friendUserIds)) return;
+
+    const onlineStatuses = {};
+    friendUserIds.forEach(friendId => {
+      onlineStatuses[friendId] = onlineUsers.has(friendId);
+    });
+
+    socket.emit("friends-online-status", onlineStatuses);
+  });
+
+  // Send room invite to a friend
+  socket.on("invite-to-room", ({ targetUserId, roomId }) => {
+    const targetSocketId = onlineUsers.get(targetUserId);
+
+    if (!targetSocketId) {
+      socket.emit("invite-error", { message: "Friend is not online" });
+      return;
+    }
+
+    const targetSocket = io.sockets.sockets.get(targetSocketId);
+    if (!targetSocket) {
+      socket.emit("invite-error", { message: "Friend is not online" });
+      return;
+    }
+
+    // Send invite to target
+    targetSocket.emit("room-invite", {
+      roomId,
+      fromUsername: socket.username,
+      fromAvatar: socket.avatar || "👤",
+      fromUserId: socket.userId
+    });
+
+    socket.emit("invite-sent", { targetUserId });
+  });
 
   socket.on("createRoom", (data) => {
     // Rate limiting
@@ -504,6 +554,12 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("updateUsers", getUsers(roomId));
       if (rooms.get(roomId).size === 0) rooms.delete(roomId);
     }
+
+    // Remove from online users
+    if (socket.registeredUserId) {
+      onlineUsers.delete(socket.registeredUserId);
+    }
+
     console.log("User disconnected:", socket.id);
   });
 });

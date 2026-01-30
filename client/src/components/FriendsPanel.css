@@ -1,0 +1,236 @@
+.friends-panel {
+  background-color: #fff;
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0 #000;
+  padding: 15px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  width: 250px;
+  max-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: max-height 0.2s ease;
+  overflow: hidden;
+}
+
+/* Floating style - fixed position top left */
+.friends-panel.floating {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+/* Minimized state */
+.friends-panel.minimized {
+  max-height: none;
+  height: auto;
+}
+
+.friends-panel.minimized .friends-panel-header {
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.friends-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #000;
+  margin-bottom: 10px;
+}
+
+.friends-panel-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #ff0033;
+  text-shadow: 1px 1px #000;
+}
+
+.friends-header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.friends-header-btn {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #000;
+  border-radius: 0;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.friends-header-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.friends-header-btn.add-btn {
+  background-color: #00ff00;
+  font-weight: 700;
+}
+
+.friends-header-btn.requests-btn {
+  background-color: #ffcc00;
+}
+
+.friends-header-btn.minimize-btn {
+  background-color: #fff;
+  font-weight: 700;
+}
+
+.friends-header-btn.minimize-btn:hover {
+  background-color: #ffffcc;
+}
+
+.requests-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff0033;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 2px solid #000;
+}
+
+.friends-login-prompt,
+.friends-loading,
+.friends-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.friends-empty p {
+  margin-bottom: 15px;
+}
+
+.add-friend-btn {
+  padding: 10px 20px;
+  border: 3px solid #000;
+  background-color: #00ff00;
+  color: #000;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #000;
+  transition: all 0.1s ease;
+}
+
+.add-friend-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.friends-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 2px dashed #ccc;
+}
+
+.friend-item:last-child {
+  border-bottom: none;
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-avatar {
+  font-size: 1.3rem;
+}
+
+.friend-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friend-status {
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.friend-status.online {
+  color: #00cc00;
+}
+
+.friend-status.offline {
+  color: #999;
+}
+
+.invite-btn {
+  padding: 5px 10px;
+  border: 2px solid #000;
+  background-color: #0066ff;
+  color: #fff;
+  font-family: 'Comic Sans MS', cursive;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+}
+
+.invite-btn:hover:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.invite-btn:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.invite-btn.sent {
+  background-color: #00cc00;
+}
+
+.refresh-btn {
+  margin-top: 10px;
+  padding: 8px;
+  border: 2px solid #000;
+  background-color: #fff8dc;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+  transition: all 0.1s ease;
+  align-self: center;
+}
+
+.refresh-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
